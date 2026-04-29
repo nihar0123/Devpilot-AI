@@ -48,7 +48,7 @@ export async function GET() {
   const { org, role } = await getOrCreateUserOrg(session.user.id, session.user.name || "", session.user.email || "");
 
   return NextResponse.json({
-    organization: { id: org.id, name: org.name, role, plan: "FREE" },
+    organization: { id: org.id, name: org.name, slug: org.slug, website: org.website || "", role, plan: "FREE" },
     user: session.user,
   });
 }

@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -11,9 +12,33 @@ const tabs = ["Profile", "Organization", "Billing", "API Keys", "Notifications"]
 
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
   const [tab, setTab] = useState<(typeof tabs)[number]>("Profile");
-  const [profile, setProfile] = useState({ name: "Nihar Sharma", email: "nihar@devpilot.ai", bio: "Building AI workflows for shipping teams." });
-  const [org, setOrg] = useState({ name: "DevPilot Workspace", slug: "devpilot-workspace", website: "https://devpilot.ai" });
+  const [profile, setProfile] = useState({ name: "", email: "", bio: "" });
+  const [org, setOrg] = useState({ name: "", slug: "", website: "" });
+
+  // Load real user and org data on mount
+  useEffect(() => {
+    if (session?.user) {
+      setProfile((prev) => ({
+        ...prev,
+        name: session.user?.name || "",
+        email: session.user?.email || "",
+      }));
+    }
+    void fetch("/api/team/context")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.organization) {
+          setOrg({
+            name: data.organization.name || "",
+            slug: data.organization.slug || "",
+            website: data.organization.website || "",
+          });
+        }
+      })
+      .catch(() => null);
+  }, [session]);
   const [apiKey, setApiKey] = useState("dp_••••••••••••••••3f9a");
   const [revealed, setRevealed] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);

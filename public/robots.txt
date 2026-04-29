@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /login
+Disallow: /invite/
+
+Sitemap: https://devpilot-ai-one.vercel.app/sitemap.xml

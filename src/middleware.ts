@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  // Check for session cookie (works in Edge runtime without any imports)
   const sessionCookie =
     request.cookies.get("next-auth.session-token") ||
     request.cookies.get("__Secure-next-auth.session-token");

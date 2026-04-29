@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DevPilot AI
 
-## Getting Started
+Build Faster. Review Smarter. Ship Better.
 
-First, run the development server:
+## Deployment
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Vercel (Frontend + API)
+1. Push repository to GitHub.
+2. Import project in Vercel.
+3. Set environment variables from `.env.example`.
+4. Add managed PostgreSQL (Supabase / Railway / Render) and set `DATABASE_URL`.
+5. Run Prisma migration in build command or post-deploy:
+   - `npx prisma migrate deploy`
+   - `npx prisma generate`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Database Options
+- Supabase Postgres
+- Railway Postgres
+- Render Postgres
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Local Setup
+1. `npm install`
+2. `cp .env.example .env`
+3. Configure OAuth and DB env vars
+4. `npx prisma migrate dev`
+5. `npm run db:seed`
+6. `npm run dev`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Notes
+- If `OPENAI_API_KEY` is not present, AI modules return realistic demo outputs.
+- GitHub OAuth is configured through NextAuth.
+- API routes are in `src/app/api`.
+- Repo analytics supports:
+  - Demo mode by default
+  - Live GitHub mode via `/api/repo-analytics?repoUrl=<url>`
+  - Higher GitHub API limits with optional `GITHUB_TOKEN`
+- Enterprise scaffolding included:
+  - Role-based team models (`OWNER/ADMIN/MEMBER/VIEWER`)
+  - Team invite and member endpoints
+  - Audit logging utility
+  - Billing plan catalog and checkout bootstrap endpoint
+- Invite emails:
+  - Configure `RESEND_API_KEY` and `INVITE_FROM_EMAIL` to send invite emails automatically
+  - If not configured, invite creation still succeeds and returns a copyable invite link
+  - Reminder job endpoint: `POST /api/team/invites/reminders` with header `Authorization: Bearer <CRON_SECRET>`
+  - Sends reminder emails for pending invites expiring in under 24h (once per invite)
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

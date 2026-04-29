@@ -1,0 +1,27 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/db/prisma";
+import { getOrCreateUserOrg } from "../context/route";
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { org } = await getOrCreateUserOrg(session.user.id, session.user.name || "", session.user.email || "");
+
+  const members = await prisma.organizationMember.findMany({
+    where: { orgId: org.id },
+    include: { user: true },
+    orderBy: { joinedAt: "asc" },
+  });
+
+  return NextResponse.json(
+    members.map((m) => ({
+      id: m.id,
+      name: m.user.name || m.user.email?.split("@")[0] || "Unknown User",
+      email: m.user.email,
+      role: m.role,
+      status: "Active",
+    }))
+  );
+}

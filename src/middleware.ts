@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   // Protect dashboard routes — redirect to login if no session cookie
   if (req.nextUrl.pathname.startsWith("/dashboard")) {
     const sessionCookie =

@@ -9,8 +9,8 @@ const DEMO_MEMBERS = [
 ];
 
 const DEMO_INVITES = [
-  { id: "invite-1", email: "newhire@devpilot.ai", role: "MEMBER", sentAt: "2 days ago", expiresAt: "in 5 days", inviteUrl: "http://localhost:3000/invite/demo-member", token: "demo-member", status: "PENDING" },
-  { id: "invite-2", email: "designer@devpilot.ai", role: "VIEWER", sentAt: "6 hours ago", expiresAt: "in 6 days", inviteUrl: "http://localhost:3000/invite/demo-viewer", token: "demo-viewer", status: "PENDING" },
+  { id: "invite-1", email: "newhire@devpilot.ai", role: "MEMBER", sentAt: "2 days ago", expiresAt: "in 5 days", inviteUrl: "https://devpilotai.dev/invite/demo-member", token: "demo-member", status: "PENDING" },
+  { id: "invite-2", email: "designer@devpilot.ai", role: "VIEWER", sentAt: "6 hours ago", expiresAt: "in 6 days", inviteUrl: "https://devpilotai.dev/invite/demo-viewer", token: "demo-viewer", status: "PENDING" },
 ];
 
 export async function getProjects() {

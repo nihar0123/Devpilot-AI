@@ -7,12 +7,14 @@ import { Bug, FolderOpen, TestTube, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useProjects } from "@/components/projects/project-provider";
 
 type TrendPoint = { day: string; score: number };
 type ActivityItem = { id: string; type: string; description: string; time: string };
 type RepoAnalytics = { bugHotspotData?: Array<{ bugs: number }>; recentActivityData?: ActivityItem[] };
 
 export default function DashboardOverviewPage() {
+  const { selectedProject, projects } = useProjects();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({ totalProjects: 0, avgQuality: 78, openBugs: 0, testsGenerated: 0 });
   const [trend, setTrend] = useState<TrendPoint[]>([]);
@@ -46,6 +48,12 @@ export default function DashboardOverviewPage() {
 
   return (
     <div className="space-y-6">
+      {!selectedProject && !projects.length ? (
+        <Card>
+          <h1 className="text-2xl font-semibold">Create your first Code Quality Cockpit</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">Use the project selector in the top bar to connect a repo. After that, reviews, bug reports, docs, tests, analytics, and tasks all stay tied to that project workspace.</p>
+        </Card>
+      ) : null}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatsCard title="Total Projects" value={metrics.totalProjects} icon={<FolderOpen size={20} />} iconColor="text-purple-300" trend="+2 this month" loading={loading} />
         <StatsCard title="Avg Quality Score" value={`${metrics.avgQuality}/100`} icon={<TrendingUp size={20} />} iconColor="text-blue-300" trend="+5 from last week" loading={loading} />

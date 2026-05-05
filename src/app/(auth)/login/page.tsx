@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getProviders, signIn, useSession } from "next-auth/react";
 import { Loader2, Mail, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +24,8 @@ function LoginContent() {
   const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const isSignup = pathname.includes("/signup");
   const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
@@ -107,8 +109,8 @@ function LoginContent() {
         <section className="space-y-8">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs text-slate-200"><Sparkles size={14} /> Build Faster. Review Smarter. Ship Better.</p>
           <div>
-            <h1 className="text-5xl font-semibold tracking-tight text-white md:text-6xl">Welcome to <span className="text-[#aeb0ff]">DevPilot AI</span></h1>
-            <p className="mt-5 max-w-xl text-lg leading-8 text-slate-300">The AI Developer Productivity Suite for modern engineering teams.</p>
+            <h1 className="text-5xl font-semibold tracking-tight text-white md:text-6xl">DevPilot AI <span className="text-[#aeb0ff]">Code Quality Cockpit</span></h1>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-slate-300">Connect a repo, run AI reviews, assign follow-up tasks, and track exactly who finished the work.</p>
           </div>
           <ul className="space-y-4 text-sm text-slate-200">
             {highlights.map((item, index) => (
@@ -124,16 +126,20 @@ function LoginContent() {
 
         <section className="relative z-20">
           <Card className="mx-auto w-full max-w-xl rounded-[32px] p-8 sm:p-10">
-            <h2 className="text-4xl font-semibold text-white">Sign in to your workspace</h2>
-            <p className="mt-4 text-base leading-7 text-slate-300">Use your account to continue to dashboard and team tools.</p>
+            <div className="mb-6 grid grid-cols-2 rounded-2xl border border-white/10 bg-white/5 p-1 text-sm">
+              <Link href="/login" className={`rounded-xl px-4 py-2 text-center ${!isSignup ? "bg-white text-slate-900" : "text-slate-300"}`}>Sign in</Link>
+              <Link href="/signup" className={`rounded-xl px-4 py-2 text-center ${isSignup ? "bg-white text-slate-900" : "text-slate-300"}`}>Sign up</Link>
+            </div>
+            <h2 className="text-4xl font-semibold text-white">{isSignup ? "Create your cockpit" : "Sign in to your cockpit"}</h2>
+            <p className="mt-4 text-base leading-7 text-slate-300">{isSignup ? "Start with GitHub, Google, or email. Your first project workspace is created after login." : "Use your account to continue to project, team, and task workflows."}</p>
             <div className="mt-8 space-y-3">
               <Button type="button" size="lg" className="w-full" onClick={handleGitHub} disabled={githubLoading}>
                 {githubLoading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                {githubLoading ? "Connecting..." : "Continue with GitHub"}
+                {githubLoading ? "Connecting..." : isSignup ? "Sign up with GitHub" : "Continue with GitHub"}
               </Button>
               <Button type="button" size="lg" variant="outline" className="w-full" onClick={handleGoogle} disabled={!googleConfigured || googleLoading} title={googleConfigured ? undefined : "Configure GOOGLE_CLIENT_ID in .env to enable"}>
                 {googleLoading ? <Loader2 size={16} className="animate-spin" /> : null}
-                {googleLoading ? "Connecting..." : "Continue with Google"}
+                {googleLoading ? "Connecting..." : isSignup ? "Sign up with Google" : "Continue with Google"}
               </Button>
             </div>
             <div className="my-8 h-px bg-white/10" />
@@ -144,7 +150,7 @@ function LoginContent() {
                 <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" onKeyDown={(event) => event.key === "Enter" && handleEmail()} />
                 <Button type="button" size="lg" variant="outline" className="w-full" onClick={handleEmail} disabled={emailLoading || !emailConfigured} title={emailConfigured ? undefined : "Configure EMAIL_SERVER_USER and EMAIL_SERVER_PASS in .env to enable"}>
                   {emailLoading ? <Loader2 size={16} className="animate-spin" /> : null}
-                  {emailLoading ? "Sending link..." : "Continue with Email"}
+                  {emailLoading ? "Sending link..." : isSignup ? "Sign up with Email" : "Continue with Email"}
                 </Button>
               </div>
             )}

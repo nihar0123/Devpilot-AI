@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { CodeInput } from "@/components/ui/CodeInput";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
+import { useProjects } from "@/components/projects/project-provider";
 
 type BugItem = {
   id: string;
@@ -23,9 +24,11 @@ type BugResult = {
   totalBugs: number;
   severityBreakdown: { critical: number; high: number; medium: number; low: number };
   bugs: BugItem[];
+  savedBugIds?: string[];
 };
 
 export default function BugFinderPage() {
+  const { selectedProject } = useProjects();
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("typescript");
   const [loading, setLoading] = useState(false);
@@ -41,15 +44,41 @@ export default function BugFinderPage() {
   async function analyze() {
     try {
       setLoading(true);
-      const res = await fetch("/api/bug-finder", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, language }) });
+      const res = await fetch("/api/bug-finder", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, language, projectId: selectedProject?.id }) });
       if (!res.ok) throw new Error(await res.text());
-      setResult((await res.json()) as BugResult);
+      const data = (await res.json()) as BugResult;
+      setResult(data);
+      toast.success(data.savedBugIds?.length ? `Saved ${data.savedBugIds.length} bugs to ${selectedProject?.name}` : "Bug scan complete");
     } catch (error) {
       console.error(error);
       toast.error("Operation failed. Please try again.");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function createTaskFromBug(bug: BugItem, index: number) {
+    if (!selectedProject) {
+      toast.error("Connect a project first");
+      return;
+    }
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectId: selectedProject.id,
+        title: bug.title,
+        description: `${bug.description}\n\nSuggested fix: ${bug.suggestedFix}`,
+        priority: bug.severity === "critical" ? "URGENT" : bug.severity === "high" ? "HIGH" : bug.severity === "low" ? "LOW" : "MEDIUM",
+        sourceType: "BUG_REPORT",
+        sourceId: result?.savedBugIds?.[index],
+      }),
+    });
+    if (!res.ok) {
+      toast.error("Could not create task");
+      return;
+    }
+    toast.success("Task created from bug");
   }
 
   function exportReport() {
@@ -74,6 +103,7 @@ export default function BugFinderPage() {
     <div className="space-y-6">
       <Card>
         <h1 className="mb-5 text-2xl font-semibold">Bug Finder</h1>
+        <p className="mb-4 text-sm text-slate-400">Saving into: {selectedProject?.name ?? "connect a project in the top bar"}</p>
         <CodeInput value={code} onChange={setCode} language={language} onLanguageChange={setLanguage} onAnalyze={analyze} isLoading={loading} analyzeLabel="Find Bugs" />
       </Card>
 
@@ -102,6 +132,7 @@ export default function BugFinderPage() {
             <div className="space-y-4">
               {filteredBugs.map((bug) => {
                 const open = expandedId === bug.id;
+                const bugIndex = result.bugs.findIndex((item) => item.id === bug.id);
                 return (
                   <div key={bug.id} className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
                     <button type="button" className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left" onClick={() => setExpandedId(open ? null : bug.id)}>
@@ -119,6 +150,7 @@ export default function BugFinderPage() {
                         <p>{bug.description}</p>
                         {bug.codeContext ? <pre className="overflow-auto rounded-2xl bg-black/30 p-4 text-xs"><code>{bug.codeContext}</code></pre> : null}
                         <div className="rounded-2xl border-l-4 border-emerald-400 bg-emerald-500/10 p-4 text-emerald-300">Suggested Fix: {bug.suggestedFix}</div>
+                        <button type="button" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold" onClick={() => createTaskFromBug(bug, bugIndex)}>Create task</button>
                       </div>
                     ) : null}
                   </div>

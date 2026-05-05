@@ -18,6 +18,7 @@ export async function GET() {
   return NextResponse.json(
     members.map((m) => ({
       id: m.id,
+      userId: m.userId,
       name: m.user.name || m.user.email?.split("@")[0] || "Unknown User",
       email: m.user.email,
       role: m.role,

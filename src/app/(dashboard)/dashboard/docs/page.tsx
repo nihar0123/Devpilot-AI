@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { CodeInput } from "@/components/ui/CodeInput";
 import { Input } from "@/components/ui/input";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useProjects } from "@/components/projects/project-provider";
 
 const options = [
   { label: "README.md", value: "readme", responseKey: "readme" },
@@ -17,9 +18,10 @@ const options = [
 ] as const;
 
 export default function DocsGeneratorPage() {
+  const { selectedProject } = useProjects();
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("typescript");
-  const [projectName, setProjectName] = useState("my-awesome-project");
+  const [projectName, setProjectName] = useState("");
   const [docTypes, setDocTypes] = useState<string[]>(["readme", "setup", "api", "summary"]);
   const [activeDoc, setActiveDoc] = useState<(typeof options)[number]["responseKey"]>("readme");
   const [mode, setMode] = useState<"preview" | "raw">("preview");
@@ -35,12 +37,12 @@ export default function DocsGeneratorPage() {
       const res = await fetch("/api/docs-generator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, projectName, docTypes }),
+        body: JSON.stringify({ code, projectName: projectName || selectedProject?.name, docTypes, projectId: selectedProject?.id }),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setResult(data);
-      toast.success("Documentation generated");
+      toast.success(data.savedDocumentationId ? `Docs saved to ${selectedProject?.name}` : "Documentation generated");
     } catch (error) {
       console.error(error);
       toast.error("Operation failed. Please try again.");
@@ -57,7 +59,8 @@ export default function DocsGeneratorPage() {
         <h1 className="mb-5 text-2xl font-semibold">Documentation Generator</h1>
         <div className="mb-5 space-y-2">
           <label className="text-sm font-medium">Project Name</label>
-          <Input value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="my-awesome-project" />
+          <Input value={projectName || selectedProject?.name || ""} onChange={(event) => setProjectName(event.target.value)} placeholder="my-awesome-project" />
+          <p className="text-xs text-slate-500">Saving into: {selectedProject?.name ?? "connect a project in the top bar"}</p>
         </div>
         <CodeInput value={code} onChange={setCode} language={language} onLanguageChange={setLanguage} onAnalyze={generate} isLoading={loading} analyzeLabel="Generate Docs">
           <div>

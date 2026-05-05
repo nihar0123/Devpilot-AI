@@ -5,6 +5,7 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, PolarAngleAxis, 
 import { Card } from "@/components/ui/card";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { StatsCard } from "@/components/ui/StatsCard";
+import { useProjects } from "@/components/projects/project-provider";
 
 type MetricSummary = { totalCommits: number; prsMerged: number; avgReviewTime: string; qualityScore: string };
 type CommitPoint = { week: string; commits: number };
@@ -15,6 +16,7 @@ type RadarPoint = { metric: string; you: number; team: number };
 type AnalyticsPayload = { metrics: MetricSummary; commitActivityData: CommitPoint[]; qualityTrendData: QualityPoint[]; heatmapData: HeatCell[]; bugHotspotData: HotspotRow[]; radarData: RadarPoint[]; isSolo?: boolean };
 
 export default function RepoAnalyticsPage() {
+  const { selectedProject } = useProjects();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AnalyticsPayload | null>(null);
   const [sortDesc, setSortDesc] = useState(true);
@@ -26,7 +28,10 @@ export default function RepoAnalyticsPage() {
     let mounted = true;
     (async () => {
       try {
-        const url = repoUrl ? `/api/repo-analytics?repoUrl=${encodeURIComponent(repoUrl)}` : "/api/repo-analytics";
+        const params = new URLSearchParams();
+        if (repoUrl) params.set("repoUrl", repoUrl);
+        if (selectedProject?.id) params.set("projectId", selectedProject.id);
+        const url = params.toString() ? `/api/repo-analytics?${params}` : "/api/repo-analytics";
         const res = await fetch(url);
         if (!res.ok) throw new Error(await res.text());
         const json = (await res.json()) as AnalyticsPayload;
@@ -38,7 +43,7 @@ export default function RepoAnalyticsPage() {
       }
     })();
     return () => { mounted = false; };
-  }, [repoUrl]);
+  }, [repoUrl, selectedProject?.id]);
 
   const handleRepoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +66,7 @@ export default function RepoAnalyticsPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex-1">
             <h2 className="text-lg font-semibold mb-1">Analyse a GitHub Repository</h2>
-            <p className="text-sm text-slate-400">Paste any public or private GitHub repo URL to update the dashboard.</p>
+            <p className="text-sm text-slate-400">Using {selectedProject?.name ?? "the selected project"} as the cockpit context. Paste a repo URL to override it for this view.</p>
           </div>
         </div>
         <form onSubmit={handleRepoSubmit} className="mt-4 flex gap-3">

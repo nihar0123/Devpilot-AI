@@ -9,6 +9,7 @@ import { CodeBlock } from "@/components/ui/CodeBlock";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { ScoreCircle } from "@/components/ui/ScoreCircle";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
+import { useProjects } from "@/components/projects/project-provider";
 
 type ReviewIssue = {
   id: string;
@@ -33,9 +34,11 @@ type ReviewResult = {
   issues: ReviewIssue[];
   refactoredCode: string;
   securityRisks: SecurityRisk[];
+  savedAnalysisId?: string | null;
 };
 
 export default function CodeReviewPage() {
+  const { selectedProject } = useProjects();
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("typescript");
   const [loading, setLoading] = useState(false);
@@ -51,11 +54,11 @@ export default function CodeReviewPage() {
   async function analyze() {
     try {
       setLoading(true);
-      const res = await fetch("/api/code-review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, language }) });
+      const res = await fetch("/api/code-review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, language, projectId: selectedProject?.id }) });
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as ReviewResult;
       setResult(data);
-      toast.success(`Analysis complete! Score: ${data.score}/100`);
+      toast.success(data.savedAnalysisId ? `Saved to ${selectedProject?.name}: ${data.score}/100` : `Analysis complete! Score: ${data.score}/100`);
     } catch (error) {
       console.error(error);
       toast.error("Analysis failed. Please try again.");
@@ -64,10 +67,35 @@ export default function CodeReviewPage() {
     }
   }
 
+  async function createTaskFromIssue(issue: ReviewIssue) {
+    if (!selectedProject) {
+      toast.error("Connect a project first");
+      return;
+    }
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectId: selectedProject.id,
+        title: issue.title,
+        description: `${issue.description}\n\nSuggested fix: ${issue.suggestedFix}`,
+        priority: issue.severity === "critical" ? "URGENT" : issue.severity === "high" ? "HIGH" : issue.severity === "low" ? "LOW" : "MEDIUM",
+        sourceType: "CODE_REVIEW",
+        sourceId: result?.savedAnalysisId,
+      }),
+    });
+    if (!res.ok) {
+      toast.error("Could not create task");
+      return;
+    }
+    toast.success("Task created from issue");
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
         <h1 className="mb-5 text-2xl font-semibold">AI Code Review</h1>
+        <p className="mb-4 text-sm text-slate-400">Saving into: {selectedProject?.name ?? "connect a project in the top bar"}</p>
         <CodeInput value={code} onChange={setCode} language={language} onLanguageChange={setLanguage} onAnalyze={analyze} isLoading={loading} analyzeLabel="Analyze Code" />
       </Card>
 
@@ -123,6 +151,7 @@ export default function CodeReviewPage() {
                       <p className="mt-3 text-sm leading-7 text-slate-300">{issue.description}</p>
                       {issue.snippet ? <pre className="mt-4 overflow-auto rounded-2xl bg-black/30 p-4 text-xs"><code>{issue.snippet}</code></pre> : null}
                       <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">Suggested Fix: {issue.suggestedFix}</div>
+                      <button type="button" className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold" onClick={() => createTaskFromIssue(issue)}>Create task</button>
                     </div>
                   )) : <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-slate-300">No issues found! Great code.</div>}
                 </div>

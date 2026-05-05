@@ -14,7 +14,7 @@ const features = [
 ];
 
 const testimonials = [
-  { quote: "DevPilot AI cut our review turnaround time by nearly half in the first sprint.", name: "Ava Thompson", role: "Staff Engineer", company: "Northstar Cloud" },
+  { quote: "DevPilot AI turned review output into assigned follow-up work instead of another forgotten report.", name: "Ava Thompson", role: "Staff Engineer", company: "Northstar Cloud" },
   { quote: "The bug finder caught two production regressions before they reached QA. That alone paid for the platform.", name: "Rohan Desai", role: "Engineering Manager", company: "LoopStack" },
   { quote: "Documentation generation turned our onboarding from a week-long scramble into a repeatable checklist.", name: "Mina Park", role: "Platform Lead", company: "ScaleForge" },
 ];
@@ -33,9 +33,9 @@ export default function LandingPage() {
 
       <section className="mx-auto max-w-7xl px-6 pt-16 pb-14 lg:px-8 lg:pt-24">
         <div className="mx-auto max-w-4xl text-center">
-          <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-200">? Build Faster. Review Smarter. Ship Better.</span>
-          <h1 className="mt-8 text-5xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">AI Productivity Suite for Modern Developers</h1>
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-300">Automate code reviews, generate docs, find bugs, create tests, and track repo performance — all in one platform.</p>
+          <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-200">Code Quality Cockpit for Engineering Teams</span>
+          <h1 className="mt-8 text-5xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">One cockpit for repo quality, AI findings, and team follow-through</h1>
+          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-300">Connect a project, run AI code reviews, find bugs, generate docs and tests, then assign the work and track who completed it.</p>
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
             <Link href="/login" className="inline-flex items-center justify-center rounded-2xl bg-[var(--purple)] px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(117,104,255,0.35)]">Start Free</Link>
             <Link href="/dashboard" className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white">Live Demo</Link>
@@ -56,7 +56,7 @@ export default function LandingPage() {
       <section id="features" className="mx-auto max-w-7xl px-6 pt-24 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-sm font-medium text-[#c9c4ff]">Features</p>
-          <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Everything your team needs to review, document, and ship confidently</h2>
+          <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Everything your team needs to turn AI findings into finished engineering work</h2>
         </div>
         <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {features.map((feature) => (
@@ -74,9 +74,9 @@ export default function LandingPage() {
       <section className="mx-auto max-w-7xl px-6 pt-24 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-3">
           {[
-            ["Connect", "Link your GitHub repo or paste code directly"],
-            ["Analyze", "AI analyzes your code for quality, bugs, and improvements"],
-            ["Ship", "Apply suggestions and ship better code faster"],
+            ["Connect", "Create a project workspace around a GitHub repo"],
+            ["Analyze", "Run code review, bug, docs, tests, and repo analytics in one context"],
+            ["Follow through", "Assign tasks, check them off, and see who completed the work"],
           ].map(([title, description], index) => (
             <Card key={title} className="rounded-3xl bg-white/5">
               <div className="text-sm font-semibold text-[#c9c4ff]">0{index + 1}</div>

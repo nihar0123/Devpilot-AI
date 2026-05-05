@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { getRepoAnalytics as getDemoAnalytics, getRecentActivity } from "@/lib/server/data";
 import { getRepoAnalytics } from "@/lib/github/analytics";
+import { getProjectForOrg, requireWorkspace } from "@/lib/server/projects";
 
 type RepoAnalyticsPayload = Awaited<ReturnType<typeof getDemoAnalytics>> & {
   recentActivityData?: Awaited<ReturnType<typeof getRecentActivity>>;
@@ -11,8 +12,19 @@ type RepoAnalyticsPayload = Awaited<ReturnType<typeof getDemoAnalytics>> & {
 export async function GET(request: NextRequest) {
   const urlParams = request.nextUrl.searchParams;
   const requestedRepo = urlParams.get("repoUrl");
-  // Default to a real repo if none provided so the dashboard always shows real data
-  const repoUrl = requestedRepo || "https://github.com/facebook/react";
+  const projectId = urlParams.get("projectId");
+  let repoUrl = requestedRepo || "";
+
+  if (projectId) {
+    const workspace = await requireWorkspace();
+    if ("error" in workspace) return NextResponse.json({ error: workspace.error }, { status: workspace.status });
+    const project = await getProjectForOrg(projectId, workspace.org.id);
+    if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    repoUrl = repoUrl || project.repoUrl || "";
+  }
+
+  // Default to a real repo if none provided so the dashboard always shows real data.
+  repoUrl = repoUrl || "https://github.com/facebook/react";
 
   // Get the base structure from demo data
   const payload: RepoAnalyticsPayload = await getDemoAnalytics();

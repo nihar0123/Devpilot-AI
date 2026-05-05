@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { CodeBlock } from "@/components/ui/CodeBlock";
 import { CodeInput } from "@/components/ui/CodeInput";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useProjects } from "@/components/projects/project-provider";
 
 type TestResult = {
   testCode: string;
@@ -14,9 +15,11 @@ type TestResult = {
   edgeCaseCount: number;
   mockCount: number;
   coverageSuggestions: string[];
+  savedTestSuiteId?: string | null;
 };
 
 export default function TestGeneratorPage() {
+  const { selectedProject } = useProjects();
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("typescript");
   const [framework, setFramework] = useState("jest");
@@ -28,10 +31,11 @@ export default function TestGeneratorPage() {
   async function generate() {
     try {
       setLoading(true);
-      const res = await fetch("/api/test-generator", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, language, framework }) });
+      const res = await fetch("/api/test-generator", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, language, framework, projectId: selectedProject?.id }) });
       if (!res.ok) throw new Error(await res.text());
-      setResult((await res.json()) as TestResult);
-      toast.success("Tests generated");
+      const data = (await res.json()) as TestResult;
+      setResult(data);
+      toast.success(data.savedTestSuiteId ? `Tests saved to ${selectedProject?.name}` : "Tests generated");
     } catch (error) {
       console.error(error);
       toast.error("Operation failed. Please try again.");
@@ -44,6 +48,7 @@ export default function TestGeneratorPage() {
     <div className="space-y-6">
       <Card>
         <h1 className="mb-5 text-2xl font-semibold">Test Generator</h1>
+        <p className="mb-4 text-sm text-slate-400">Saving into: {selectedProject?.name ?? "connect a project in the top bar"}</p>
         <CodeInput value={code} onChange={setCode} language={language} onLanguageChange={(nextLanguage) => { setLanguage(nextLanguage); setFramework(nextLanguage === "python" ? "pytest" : "jest"); }} onAnalyze={generate} isLoading={loading} analyzeLabel="Generate Tests">
           <div className="grid gap-3 sm:grid-cols-2">
             <select value={language} onChange={(event) => { setLanguage(event.target.value); setFramework(event.target.value === "python" ? "pytest" : "jest"); }} className="rounded-2xl border border-white/12 bg-black/20 px-4 py-3 text-sm text-slate-100">

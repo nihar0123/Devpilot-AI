@@ -25,14 +25,14 @@ export default function TeamPage() {
   }, []);
 
   async function loadData() {
-    const [membersRes, invitesRes, contextRes, repoRes] = await Promise.all([fetch("/api/team/members"), fetch("/api/team/invites"), fetch("/api/team/context"), fetch("/api/repo-analytics")]);
-    const [members, invites, context, repo] = await Promise.all([
+    const [membersRes, invitesRes, contextRes, activityRes] = await Promise.all([fetch("/api/team/members"), fetch("/api/team/invites"), fetch("/api/team/context"), fetch("/api/activity")]);
+    const [members, invites, context, activity] = await Promise.all([
       membersRes.json() as Promise<Member[]>,
       invitesRes.json() as Promise<Invite[]>,
       contextRes.json() as Promise<{ organization: { id: string; name: string } }>,
-      repoRes.json() as Promise<{ recentActivityData?: Activity[] }>,
+      activityRes.json() as Promise<Activity[]>,
     ]);
-    setData({ members, invites, context, activity: repo.recentActivityData ?? [] });
+    setData({ members, invites, context, activity });
   }
 
   async function sendInvite() {
@@ -52,7 +52,7 @@ export default function TeamPage() {
 
   async function resendInvite(inviteId: string) {
     try {
-      const res = await fetch("/api/team/invites/reminders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inviteId }) });
+      const res = await fetch(`/api/team/invites/${inviteId}`, { method: "POST" });
       if (!res.ok) throw new Error(await res.text());
       toast.success("Reminder sent");
     } catch (error) {

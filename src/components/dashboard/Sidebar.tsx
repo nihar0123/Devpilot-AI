@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart2, Bug, Code2, FileText, LayoutDashboard, Settings, TestTube, Users, X } from "lucide-react";
+import { BarChart2, Bug, CheckSquare, Code2, FileText, LayoutDashboard, Settings, TestTube, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { label: "Bug Finder", href: "/dashboard/bugs", icon: Bug },
   { label: "Tests", href: "/dashboard/tests", icon: TestTube },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart2 },
+  { label: "Tasks", href: "/dashboard/tasks", icon: CheckSquare },
   { label: "Team", href: "/dashboard/team", icon: Users },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

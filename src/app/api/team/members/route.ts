@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
-import { getOrCreateUserOrg } from "../context/route";
+import { getOrCreateUserOrg } from "@/lib/auth/org";
 
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { org } = await getOrCreateUserOrg(session.user.id, session.user.name || "", session.user.email || "");
+  const { org } = await getOrCreateUserOrg(session.user.id, session.user.name || "");
 
   const members = await prisma.organizationMember.findMany({
     where: { orgId: org.id },

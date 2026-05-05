@@ -142,7 +142,7 @@ function LoginContent() {
             ) : (
               <div className="space-y-3">
                 <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" onKeyDown={(event) => event.key === "Enter" && handleEmail()} />
-                <Button type="button" size="lg" variant="outline" className="w-full" onClick={handleEmail} disabled={emailLoading || !emailConfigured} title={emailConfigured ? undefined : "Configure RESEND_API_KEY in .env to enable"}>
+                <Button type="button" size="lg" variant="outline" className="w-full" onClick={handleEmail} disabled={emailLoading || !emailConfigured} title={emailConfigured ? undefined : "Configure EMAIL_SERVER_USER and EMAIL_SERVER_PASS in .env to enable"}>
                   {emailLoading ? <Loader2 size={16} className="animate-spin" /> : null}
                   {emailLoading ? "Sending link..." : "Continue with Email"}
                 </Button>

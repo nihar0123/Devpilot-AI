@@ -24,7 +24,6 @@ export default function RepoAnalyticsPage() {
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
     (async () => {
       try {
         const url = repoUrl ? `/api/repo-analytics?repoUrl=${encodeURIComponent(repoUrl)}` : "/api/repo-analytics";
@@ -43,7 +42,10 @@ export default function RepoAnalyticsPage() {
 
   const handleRepoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (repoInput.trim()) setRepoUrl(repoInput.trim());
+    if (repoInput.trim()) {
+      setLoading(true);
+      setRepoUrl(repoInput.trim());
+    }
   };
 
   const analytics = data ?? { metrics: { totalCommits: 1247, prsMerged: 89, avgReviewTime: "4.2 hours", qualityScore: "78/100" }, commitActivityData: [], qualityTrendData: [], heatmapData: [], bugHotspotData: [], radarData: [] };
@@ -83,7 +85,7 @@ export default function RepoAnalyticsPage() {
             <button
               id="clear-repo-btn"
               type="button"
-              onClick={() => { setRepoUrl(""); setRepoInput(""); }}
+              onClick={() => { setLoading(true); setRepoUrl(""); setRepoInput(""); }}
               className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 hover:bg-white/10"
             >
               Clear

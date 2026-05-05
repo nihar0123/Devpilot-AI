@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
-import { getOrCreateUserOrg } from "../../team/context/route";
+import { canManageOrg, getOrCreateUserOrg } from "@/lib/auth/org";
 
 export async function PATCH(req: NextRequest) {
   const session = await auth();
@@ -12,13 +12,9 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const { name, slug, website } = body;
 
-  const { org, role } = await getOrCreateUserOrg(
-    session.user.id,
-    session.user.name || "",
-    session.user.email || ""
-  );
+  const { org, role } = await getOrCreateUserOrg(session.user.id, session.user.name || "");
 
-  if (role !== "OWNER" && role !== "ADMIN") {
+  if (!canManageOrg(role)) {
     return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
   }
 

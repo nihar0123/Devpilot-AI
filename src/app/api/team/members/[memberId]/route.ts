@@ -1,22 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
+import { requireOrgManager } from "@/lib/auth/org";
+
+const ALLOWED_ROLES = new Set(["OWNER", "ADMIN", "MEMBER", "VIEWER"]);
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ memberId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const guard = await requireOrgManager();
+  if ("error" in guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
   const { memberId } = await params;
   const body = await req.json();
   const { role } = body;
+  if (typeof role !== "string" || !ALLOWED_ROLES.has(role)) {
+    return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+  }
 
   const updated = await prisma.organizationMember.update({
-    where: { id: memberId },
+    where: { id: memberId, orgId: guard.org.id },
     data: { role },
     include: { user: true },
   });
@@ -34,24 +37,26 @@ export async function DELETE(
   _: NextRequest,
   { params }: { params: Promise<{ memberId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const guard = await requireOrgManager();
+  if ("error" in guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
   const { memberId } = await params;
 
   // Prevent removing yourself
   const member = await prisma.organizationMember.findUnique({
-    where: { id: memberId },
+    where: { id: memberId, orgId: guard.org.id },
   });
 
-  if (member?.userId === session.user.id) {
+  if (!member) {
+    return NextResponse.json({ error: "Member not found" }, { status: 404 });
+  }
+
+  if (member.userId === guard.userId) {
     return NextResponse.json({ error: "Cannot remove yourself" }, { status: 400 });
   }
 
   await prisma.organizationMember.delete({
-    where: { id: memberId },
+    where: { id: memberId, orgId: guard.org.id },
   });
 
   return NextResponse.json({ id: memberId, removed: true });

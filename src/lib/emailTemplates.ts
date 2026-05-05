@@ -73,7 +73,7 @@ export function teamInviteTemplate({
             If you did not expect this email, you can safely ignore it.
           </p>
           <p style="color:#475569;font-size:12px;margin:8px 0 0;">
-            © 2025 DevPilot AI. All rights reserved.
+            © 2026 DevPilot AI. All rights reserved.
           </p>
         </div>
 
@@ -105,7 +105,7 @@ export function welcomeEmailTemplate({
 
         <div style="padding:40px 32px;">
           <h2 style="color:#ffffff;font-size:20px;margin:0 0 16px;">
-            Hey ${userName}, welcome aboard! 🎉
+            Hey ${userName}, welcome aboard!
           </h2>
           <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin:0 0 16px;">
             You have successfully joined 
@@ -117,7 +117,7 @@ export function welcomeEmailTemplate({
             documentation generation, and team analytics.
           </p>
           <div style="text-align:center;">
-            <a href="${process.env.NEXTAUTH_URL}/dashboard"
+            <a href="${process.env.APP_URL || process.env.NEXTAUTH_URL || "https://devpilotai.dev"}/dashboard"
                style="background:#7c3aed;color:#ffffff;padding:14px 32px;
                       border-radius:8px;text-decoration:none;font-size:16px;
                       font-weight:600;display:inline-block;">
@@ -129,7 +129,7 @@ export function welcomeEmailTemplate({
         <div style="padding:24px 32px;border-top:1px solid #1e2a45;
                     text-align:center;">
           <p style="color:#475569;font-size:12px;margin:0;">
-            © 2025 DevPilot AI. All rights reserved.
+            © 2026 DevPilot AI. All rights reserved.
           </p>
         </div>
 
@@ -189,7 +189,7 @@ export function magicLinkTemplate({
         <div style="padding:24px 32px;border-top:1px solid #1e2a45;
                     text-align:center;">
           <p style="color:#475569;font-size:12px;margin:0;">
-            © 2025 DevPilot AI. All rights reserved.
+            © 2026 DevPilot AI. All rights reserved.
           </p>
         </div>
 

@@ -3,6 +3,11 @@ import { NextRequest } from "next/server";
 import { getRepoAnalytics as getDemoAnalytics, getRecentActivity } from "@/lib/server/data";
 import { getRepoAnalytics } from "@/lib/github/analytics";
 
+type RepoAnalyticsPayload = Awaited<ReturnType<typeof getDemoAnalytics>> & {
+  recentActivityData?: Awaited<ReturnType<typeof getRecentActivity>>;
+  isSolo?: boolean;
+};
+
 export async function GET(request: NextRequest) {
   const urlParams = request.nextUrl.searchParams;
   const requestedRepo = urlParams.get("repoUrl");
@@ -10,8 +15,8 @@ export async function GET(request: NextRequest) {
   const repoUrl = requestedRepo || "https://github.com/facebook/react";
 
   // Get the base structure from demo data
-  const payload = await getDemoAnalytics();
-  (payload as any).recentActivityData = await getRecentActivity();
+  const payload: RepoAnalyticsPayload = await getDemoAnalytics();
+  payload.recentActivityData = await getRecentActivity();
 
   try {
     const githubToken = process.env.GITHUB_TOKEN;
@@ -66,7 +71,7 @@ export async function GET(request: NextRequest) {
       payload.radarData = realData.radar;
     }
 
-    (payload as any).isSolo = realData.isSolo;
+    payload.isSolo = realData.isSolo;
 
     // Update top level metrics using the real data
     const totalCommits = realData.weeklyData.reduce((sum, p) => sum + p.commits, 0);
@@ -81,9 +86,8 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json(payload);
-  } catch (err) {
+  } catch {
     // Fallback to pure demo data if GitHub fetch fails
     return NextResponse.json(payload);
   }
 }
-

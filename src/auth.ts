@@ -54,7 +54,7 @@ if (hasEmail) {
           },
         },
         from: process.env.EMAIL_FROM,
-        async sendVerificationRequest({ identifier: email, url, provider }) {
+        async sendVerificationRequest({ identifier: email, url }) {
           const { sendEmail } = await import('@/lib/email');
           const { magicLinkTemplate } = await import('@/lib/emailTemplates');
           

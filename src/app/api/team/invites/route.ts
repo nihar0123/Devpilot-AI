@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
-import { getOrCreateUserOrg } from "../context/route";
+import { canManageOrg, getOrCreateUserOrg } from "@/lib/auth/org";
 import { sendEmail } from "@/lib/email";
 import { teamInviteTemplate } from "@/lib/emailTemplates";
 
@@ -9,7 +9,7 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { org } = await getOrCreateUserOrg(session.user.id, session.user.name || "", session.user.email || "");
+  const { org } = await getOrCreateUserOrg(session.user.id, session.user.name || "");
 
   const invites = await prisma.teamInvite.findMany({
     where: { orgId: org.id, status: "PENDING" },
@@ -23,7 +23,7 @@ export async function GET() {
       role: inv.role,
       sentAt: inv.createdAt.toISOString().split("T")[0],
       expiresAt: inv.expiresAt.toISOString().split("T")[0],
-      inviteUrl: `${process.env.APP_URL || "http://localhost:3000"}/invite/${inv.token}`,
+      inviteUrl: `${process.env.APP_URL || "https://devpilotai.dev"}/invite/${inv.token}`,
       status: inv.status,
     }))
   );
@@ -34,7 +34,10 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { org } = await getOrCreateUserOrg(session.user.id, session.user.name || "", session.user.email || "");
+  const { org, role } = await getOrCreateUserOrg(session.user.id, session.user.name || "");
+  if (!canManageOrg(role)) {
+    return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+  }
 
   // Check if invite already exists
   const existingInvite = await prisma.teamInvite.findFirst({
@@ -58,7 +61,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const inviteUrl = `${process.env.APP_URL || "http://localhost:3000"}/invite/${invite.token}`;
+  const inviteUrl = `${process.env.APP_URL || "https://devpilotai.dev"}/invite/${invite.token}`;
 
   // Send Email using Gmail SMTP
   await sendEmail({

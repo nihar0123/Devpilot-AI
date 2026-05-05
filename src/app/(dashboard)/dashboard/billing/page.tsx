@@ -49,7 +49,7 @@ export default function BillingPage() {
 
   async function handleUpgrade(planId: string) {
     if (planId === "scale") {
-      window.location.href = "mailto:support@devpilot.ai?subject=Scale Plan Inquiry";
+      window.location.assign("mailto:support@devpilot.ai?subject=Scale Plan Inquiry");
       return;
     }
     try {
@@ -57,6 +57,7 @@ export default function BillingPage() {
       const res = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ planId }) });
       if (!res.ok) throw new Error();
       const data = await res.json();
+      if (data.demoCheckout) toast.info(data.message);
       if (data.checkoutUrl) window.location.assign(data.checkoutUrl);
     } catch {
       toast.error("Could not start checkout. Please try again.");
@@ -69,7 +70,7 @@ export default function BillingPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-semibold">Billing & Plans</h1>
-        <p className="mt-2 text-slate-400">Manage your subscription and usage</p>
+        <p className="mt-2 text-slate-400">Manage your subscription and usage. Checkout is in demo mode until Stripe price IDs are configured.</p>
       </div>
 
       {/* Current Usage */}

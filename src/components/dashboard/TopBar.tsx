@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, FolderGit2, Menu, Plus, Search } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useProjects } from "@/components/projects/project-provider";
 
 const titles: Record<string, string> = {

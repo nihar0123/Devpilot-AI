@@ -2,16 +2,45 @@ import type { NextAuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
-import EmailProvider from "next-auth/providers/email";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 
 const hasDatabase = Boolean(process.env.DATABASE_URL);
 const hasGitHub = Boolean(process.env.GITHUB_ID && process.env.GITHUB_SECRET);
 const hasGoogle = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-const hasEmail = hasDatabase;
 
 const providers: NextAuthOptions["providers"] = [];
+
+if (hasDatabase) {
+  providers.push(
+    CredentialsProvider({
+      name: "Email",
+      credentials: {
+        email: { label: "Email", type: "email", placeholder: "you@company.com" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials.password) {
+          return null;
+        }
+
+        const user = await prisma.user.findUnique({ where: { email: credentials.email } });
+        if (!user?.passwordHash) {
+          return null;
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
+        if (!isValid) {
+          return null;
+        }
+
+        return user;
+      },
+    }),
+  );
+}
 
 if (hasGitHub) {
   providers.push(
@@ -38,48 +67,6 @@ if (hasGoogle) {
       },
     }),
   );
-}
-
-if (hasEmail) {
-  if (process.env.EMAIL_SERVER_USER && process.env.EMAIL_SERVER_PASS) {
-    providers.push(
-      EmailProvider({
-        server: {
-          host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
-          port: Number(process.env.EMAIL_SERVER_PORT) || 465,
-          secure: true,
-          auth: {
-            user: process.env.EMAIL_SERVER_USER,
-            pass: process.env.EMAIL_SERVER_PASS,
-          },
-        },
-        from: process.env.EMAIL_FROM,
-        async sendVerificationRequest({ identifier: email, url }) {
-          const { sendEmail } = await import('@/lib/email');
-          const { magicLinkTemplate } = await import('@/lib/emailTemplates');
-          
-          await sendEmail({
-            to: email,
-            subject: 'Sign in to DevPilot AI',
-            html: magicLinkTemplate({ url, email }),
-          });
-        },
-      })
-    );
-  } else {
-    // Dev mode fallback
-    providers.push(
-      EmailProvider({
-        from: "onboarding@resend.dev",
-        async sendVerificationRequest({ identifier, url }) {
-          console.log("\n=======================================================");
-          console.log(`🪄 MAGIC LINK FOR ${identifier}:`);
-          console.log(url);
-          console.log("=======================================================\n");
-        }
-      })
-    );
-  }
 }
 
 export const authConfig: NextAuthOptions = {

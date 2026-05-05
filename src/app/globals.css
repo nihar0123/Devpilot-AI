@@ -9,6 +9,27 @@
   --panel: rgba(9, 18, 34, 0.72);
   --panel-strong: rgba(13, 24, 42, 0.9);
   --purple: #7568ff;
+  --card: rgba(8, 14, 27, 0.72);
+}
+
+html.light {
+  --background: #f8fafc;
+  --background-elevated: rgba(248, 250, 252, 0.92);
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --line: rgba(15, 23, 42, 0.12);
+  --panel: rgba(255, 255, 255, 0.88);
+  --panel-strong: rgba(255, 255, 255, 0.95);
+  --purple: #6d28d9;
+  --card: rgba(255, 255, 255, 0.88);
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
 }
 
 * {
@@ -25,8 +46,43 @@ body {
   background:
     radial-gradient(circle at top left, rgba(117, 104, 255, 0.25), transparent 28%),
     radial-gradient(circle at top right, rgba(83, 203, 255, 0.18), transparent 24%),
-    linear-gradient(180deg, #06101f 0%, #091321 45%, #050b16 100%);
+    linear-gradient(180deg, var(--background) 0%, rgba(9, 18, 34, 0.95) 45%, var(--background) 100%);
   color: var(--foreground);
+}
+
+body.light {
+  background:
+    radial-gradient(circle at top left, rgba(109, 40, 217, 0.11), transparent 28%),
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 24%),
+    linear-gradient(180deg, var(--background) 0%, #e2e8f0 45%, var(--background) 100%);
+}
+
+button,
+select,
+input,
+textarea {
+  outline: none;
+  color: var(--foreground);
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+}
+
+select {
+  background: var(--panel-strong);
+  color: var(--foreground);
+}
+
+option {
+  background: var(--panel-strong);
+  color: var(--foreground);
+}
+
+select:focus,
+input:focus,
+textarea:focus,
+button:focus {
+  outline: 2px solid rgba(117, 104, 255, 0.35);
+  outline-offset: 2px;
 }
 
 a {

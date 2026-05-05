@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getProviders, signIn, useSession } from "next-auth/react";
-import { Loader2, Mail, ShieldCheck, Sparkles, Workflow } from "lucide-react";
+import { Loader2, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,16 +26,17 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const isSignup = pathname.includes("/signup");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [emailSent, setEmailSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [emailLoading, setEmailLoading] = useState(false);
   const [providers, setProviders] = useState<Record<string, unknown> | null>(null);
 
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
   const googleConfigured = Boolean(providers?.google);
-  const emailConfigured = Boolean(providers?.email);
+  const githubConfigured = Boolean(providers?.github);
 
   useEffect(() => {
     if (status === "authenticated") router.replace("/dashboard");
@@ -52,7 +53,7 @@ function LoginContent() {
         OAuthSignin: "Error connecting to provider",
         OAuthCallback: "OAuth callback error, try again",
         OAuthAccountNotLinked: "Email already linked to another provider",
-        EmailSignin: "Failed to send magic link",
+        CredentialsSignin: "Invalid email or password",
         default: "Authentication failed, try again",
       };
       toast.error(msgs[error] || msgs.default);
@@ -62,9 +63,10 @@ function LoginContent() {
   if (status === "loading") return <LoadingScreen />;
 
   const handleGitHub = async () => {
+    if (!githubConfigured) return;
     try {
       setGithubLoading(true);
-      await signIn("github", { callbackUrl: "/dashboard" });
+      await signIn("github", { callbackUrl });
     } finally {
       setGithubLoading(false);
     }
@@ -74,30 +76,87 @@ function LoginContent() {
     if (!googleConfigured) return;
     try {
       setGoogleLoading(true);
-      await signIn("google", { callbackUrl: "/dashboard" });
+      await signIn("google", { callbackUrl });
     } finally {
       setGoogleLoading(false);
     }
   };
 
-  const handleEmail = async () => {
+  const handleSignup = async () => {
+    if (!name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
     if (!email.includes("@")) {
-      toast.error("Invalid email");
+      toast.error("Valid email is required");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters");
       return;
     }
 
     try {
-      setEmailLoading(true);
-      const result = await signIn("email", { email, callbackUrl, redirect: false });
-      if (result?.ok) {
-        setEmailSent(true);
+      setLoading(true);
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Signup failed");
+      }
+
+      toast.success("Account created successfully.");
+      const signInResult = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+        callbackUrl,
+      });
+
+      if (signInResult?.ok) {
+        router.replace(callbackUrl);
       } else {
-        toast.error("Failed to send magic link");
+        toast.success("Signup complete. Please sign in.");
+      }
+    } catch (error) {
+      toast.error((error as Error).message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!email.includes("@")) {
+      toast.error("Valid email is required");
+      return;
+    }
+    if (!password) {
+      toast.error("Password is required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+        callbackUrl,
+      });
+
+      if (result?.ok) {
+        router.replace(callbackUrl);
+      } else {
+        toast.error(result?.error ?? "Invalid credentials");
       }
     } catch {
-      toast.error("Failed to send magic link");
+      toast.error("Login failed");
     } finally {
-      setEmailLoading(false);
+      setLoading(false);
     }
   };
 
@@ -117,7 +176,6 @@ function LoginContent() {
               <li key={item} className="flex items-start gap-3">
                 {index === 0 ? <ShieldCheck className="mt-0.5 text-indigo-300" size={18} /> : null}
                 {index === 1 ? <Workflow className="mt-0.5 text-sky-300" size={18} /> : null}
-                {index === 2 ? <Mail className="mt-0.5 text-emerald-300" size={18} /> : null}
                 <span>{item}</span>
               </li>
             ))}
@@ -131,9 +189,19 @@ function LoginContent() {
               <Link href="/signup" className={`rounded-xl px-4 py-2 text-center ${isSignup ? "bg-white text-slate-900" : "text-slate-300"}`}>Sign up</Link>
             </div>
             <h2 className="text-4xl font-semibold text-white">{isSignup ? "Create your cockpit" : "Sign in to your cockpit"}</h2>
-            <p className="mt-4 text-base leading-7 text-slate-300">{isSignup ? "Start with GitHub, Google, or email. Your first project workspace is created after login." : "Use your account to continue to project, team, and task workflows."}</p>
+            <p className="mt-4 text-base leading-7 text-slate-300">{isSignup ? "Create your account with email and password, then sign in to your workspace." : "Use your email and password to sign in to your workspace."}</p>
             <div className="mt-8 space-y-3">
-              <Button type="button" size="lg" className="w-full" onClick={handleGitHub} disabled={githubLoading}>
+              <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" onKeyDown={(event) => event.key === "Enter" && (isSignup ? handleSignup() : handleLogin())} />
+              {isSignup ? <Input type="text" value={name} onChange={(event) => setName(event.target.value)} placeholder="Full name" /> : null}
+              <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" onKeyDown={(event) => event.key === "Enter" && (isSignup ? handleSignup() : handleLogin())} />
+              <Button type="button" size="lg" className="w-full" onClick={isSignup ? handleSignup : handleLogin} disabled={loading}>
+                {loading ? <Loader2 size={16} className="animate-spin" /> : null}
+                {loading ? "Working..." : isSignup ? "Create account" : "Sign in"}
+              </Button>
+            </div>
+            <div className="my-8 h-px bg-white/10" />
+            <div className="space-y-3">
+              <Button type="button" size="lg" className="w-full" onClick={handleGitHub} disabled={!githubConfigured || githubLoading}>
                 {githubLoading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
                 {githubLoading ? "Connecting..." : isSignup ? "Sign up with GitHub" : "Continue with GitHub"}
               </Button>
@@ -142,18 +210,6 @@ function LoginContent() {
                 {googleLoading ? "Connecting..." : isSignup ? "Sign up with Google" : "Continue with Google"}
               </Button>
             </div>
-            <div className="my-8 h-px bg-white/10" />
-            {emailSent ? (
-              <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">Check your email! We sent a magic link to {email}</div>
-            ) : (
-              <div className="space-y-3">
-                <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" onKeyDown={(event) => event.key === "Enter" && handleEmail()} />
-                <Button type="button" size="lg" variant="outline" className="w-full" onClick={handleEmail} disabled={emailLoading || !emailConfigured} title={emailConfigured ? undefined : "Configure EMAIL_SERVER_USER and EMAIL_SERVER_PASS in .env to enable"}>
-                  {emailLoading ? <Loader2 size={16} className="animate-spin" /> : null}
-                  {emailLoading ? "Sending link..." : isSignup ? "Sign up with Email" : "Continue with Email"}
-                </Button>
-              </div>
-            )}
             <p className="mt-8 text-xs text-slate-400">By continuing, you agree to our <Link href="/terms" className="text-slate-200 underline underline-offset-4">Terms</Link> and <Link href="/privacy" className="text-slate-200 underline underline-offset-4">Privacy Policy</Link>.</p>
           </Card>
         </section>

@@ -110,11 +110,18 @@ function LoginContent() {
       }
 
       toast.success("Account created successfully.");
-      await signIn("credentials", {
+      const signInResult = await signIn("credentials", {
+        redirect: false,
         email,
         password,
         callbackUrl,
       });
+
+      if (signInResult?.ok) {
+        router.replace(callbackUrl);
+      } else {
+        toast.error(signInResult?.error || "Signup complete. Please sign in.");
+      }
     } catch (error) {
       toast.error((error as Error).message || "Signup failed");
     } finally {
@@ -134,11 +141,18 @@ function LoginContent() {
 
     try {
       setLoading(true);
-      await signIn("credentials", {
+      const result = await signIn("credentials", {
+        redirect: false,
         email,
         password,
         callbackUrl,
       });
+
+      if (result?.ok) {
+        router.replace(callbackUrl);
+      } else {
+        toast.error(result?.error || "Invalid credentials");
+      }
     } catch {
       toast.error("Login failed");
     } finally {

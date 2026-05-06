@@ -34,7 +34,9 @@ function LoginContent() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [providers, setProviders] = useState<Record<string, unknown> | null>(null);
 
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
+  const defaultCallback = "/dashboard";
+  const callbackParam = searchParams.get("callbackUrl");
+  const callbackUrl = typeof window !== "undefined" ? new URL(callbackParam ?? defaultCallback, window.location.origin).toString() : defaultCallback;
   const googleConfigured = Boolean(providers?.google);
   const githubConfigured = Boolean(providers?.github);
 
@@ -117,8 +119,8 @@ function LoginContent() {
         callbackUrl,
       });
 
-      if (signInResult?.ok) {
-        router.replace(callbackUrl);
+      if (signInResult?.ok || signInResult?.url) {
+        window.location.href = signInResult?.url ?? callbackUrl;
       } else {
         toast.error(signInResult?.error || "Signup complete. Please sign in.");
       }
@@ -148,8 +150,8 @@ function LoginContent() {
         callbackUrl,
       });
 
-      if (result?.ok) {
-        router.replace(callbackUrl);
+      if (result?.ok || result?.url) {
+        window.location.href = result?.url ?? callbackUrl;
       } else {
         toast.error(result?.error || "Invalid credentials");
       }

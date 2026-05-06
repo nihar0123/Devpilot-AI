@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
@@ -36,13 +36,18 @@ function LoginContent() {
 
   const defaultCallback = "/dashboard";
   const callbackPath = searchParams.get("callbackUrl") ?? defaultCallback;
-  const callbackUrl = typeof window !== "undefined" ? new URL(callbackPath, window.location.origin).toString() : callbackPath;
+  const [callbackUrl, setCallbackUrl] = useState(callbackPath);
+
+  useEffect(() => {
+    setCallbackUrl(new URL(callbackPath, window.location.origin).toString());
+  }, [callbackPath]);
+
   const googleConfigured = Boolean(providers?.google);
   const githubConfigured = Boolean(providers?.github);
 
   useEffect(() => {
-    if (status === "authenticated") router.replace("/dashboard");
-  }, [status, router]);
+    if (status === "authenticated") router.replace(callbackPath);
+  }, [status, router, callbackPath]);
 
   useEffect(() => {
     void getProviders().then((result) => setProviders(result ?? {}));
@@ -191,8 +196,8 @@ function LoginContent() {
         <section className="relative z-20">
           <Card className="mx-auto w-full max-w-xl rounded-[32px] p-8 sm:p-10">
             <div className="mb-6 grid grid-cols-2 rounded-2xl border border-white/10 bg-white/5 p-1 text-sm">
-              <Link href="/login" className={`rounded-xl px-4 py-2 text-center ${!isSignup ? "bg-white text-slate-900" : "text-slate-300"}`}>Sign in</Link>
-              <Link href="/signup" className={`rounded-xl px-4 py-2 text-center ${isSignup ? "bg-white text-slate-900" : "text-slate-300"}`}>Sign up</Link>
+              <Link href={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} className={`rounded-xl px-4 py-2 text-center ${!isSignup ? "bg-white text-slate-900" : "text-slate-300"}`}>Sign in</Link>
+              <Link href={`/signup${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} className={`rounded-xl px-4 py-2 text-center ${isSignup ? "bg-white text-slate-900" : "text-slate-300"}`}>Sign up</Link>
             </div>
             <h2 className="text-4xl font-semibold text-white">{isSignup ? "Create your cockpit" : "Sign in to your cockpit"}</h2>
             <p className="mt-4 text-base leading-7 text-slate-300">{isSignup ? "Create your account with email and password, then sign in to your workspace." : "Use your email and password to sign in to your workspace."}</p>

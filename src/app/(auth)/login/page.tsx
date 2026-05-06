@@ -35,8 +35,8 @@ function LoginContent() {
   const [providers, setProviders] = useState<Record<string, unknown> | null>(null);
 
   const defaultCallback = "/dashboard";
-  const callbackParam = searchParams.get("callbackUrl");
-  const callbackUrl = typeof window !== "undefined" ? new URL(callbackParam ?? defaultCallback, window.location.origin).toString() : defaultCallback;
+  const callbackPath = searchParams.get("callbackUrl") ?? defaultCallback;
+  const callbackUrl = typeof window !== "undefined" ? new URL(callbackPath, window.location.origin).toString() : callbackPath;
   const googleConfigured = Boolean(providers?.google);
   const githubConfigured = Boolean(providers?.github);
 
@@ -116,11 +116,13 @@ function LoginContent() {
         redirect: false,
         email,
         password,
-        callbackUrl,
+        callbackUrl: callbackPath,
       });
 
-      if (signInResult?.ok || signInResult?.url) {
-        window.location.href = signInResult?.url ?? callbackUrl;
+      if (signInResult?.ok) {
+        router.replace(callbackPath);
+      } else if (signInResult?.url) {
+        window.location.href = signInResult.url;
       } else {
         toast.error(signInResult?.error || "Signup complete. Please sign in.");
       }
@@ -147,11 +149,13 @@ function LoginContent() {
         redirect: false,
         email,
         password,
-        callbackUrl,
+        callbackUrl: callbackPath,
       });
 
-      if (result?.ok || result?.url) {
-        window.location.href = result?.url ?? callbackUrl;
+      if (result?.ok) {
+        router.replace(callbackPath);
+      } else if (result?.url) {
+        window.location.href = result.url;
       } else {
         toast.error(result?.error || "Invalid credentials");
       }

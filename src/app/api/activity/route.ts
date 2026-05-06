@@ -29,7 +29,7 @@ function describeActivity(action: string, metadata: unknown) {
     case "AI_TESTS_SAVED":
       return "Saved generated tests";
     default:
-      return action.replaceAll("_", " ").toLowerCase();
+      return typeof action === "string" ? action.replaceAll("_", " ").toLowerCase() : "did something";
   }
 }
 

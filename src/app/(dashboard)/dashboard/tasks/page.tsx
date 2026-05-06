@@ -56,7 +56,7 @@ function formatActivityDescription(action: string, user?: { name: string | null;
     AI_DOCS_SAVED: "generated documentation",
     AI_TESTS_SAVED: "generated tests",
   };
-  const verb = actions[action] || action.toLowerCase().replace(/_/g, " ");
+  const verb = actions[action] || (typeof action === "string" ? action.toLowerCase().replace(/_/g, " ") : "performed an action");
   return `${who} ${verb}`;
 }
 

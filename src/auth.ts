@@ -72,7 +72,7 @@ if (hasGoogle) {
 export const authConfig: NextAuthOptions = {
   ...(hasDatabase ? { adapter: PrismaAdapter(prisma) } : {}),
   secret: process.env.NEXTAUTH_SECRET,
-  session: { strategy: hasDatabase ? "database" : "jwt" },
+  session: { strategy: "jwt" },
   providers,
   pages: {
     signIn: "/login",

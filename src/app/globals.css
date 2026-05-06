@@ -85,6 +85,20 @@ button:focus {
   outline-offset: 2px;
 }
 
+input::placeholder,
+select::placeholder,
+textarea::placeholder {
+  color: var(--muted) !important;
+}
+
+input,
+select,
+textarea {
+  background: var(--panel-strong) !important;
+  color: var(--foreground) !important;
+  border-color: var(--line) !important;
+}
+
 a {
   color: inherit;
   text-decoration: none;

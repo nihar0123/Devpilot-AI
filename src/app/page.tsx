@@ -37,7 +37,7 @@ export default function LandingPage() {
           <h1 className="mt-8 text-5xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">One cockpit for repo quality, AI findings, and team follow-through</h1>
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-300">Connect a project, run AI code reviews, find bugs, generate docs and tests, then assign the work and track who completed it.</p>
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-            <Link href="/login" className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-[0_12px_45px_rgba(255,255,255,0.28)] transition hover:bg-slate-100">Start Free</Link>
+            <Link href="/login" className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-semibold !text-slate-900 shadow-[0_12px_45px_rgba(255,255,255,0.28)] transition hover:bg-slate-100">Start Free</Link>
             <Link href="/dashboard" className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">Live Demo</Link>
           </div>
         </div>

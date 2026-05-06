@@ -80,12 +80,12 @@ export default function DocsGeneratorPage() {
       <Card>
         <div className="flex flex-wrap gap-2">
           {visibleTabs.map((tab) => (
-            <button key={tab.value} type="button" className={`rounded-xl px-4 py-2 text-sm ${activeDoc === tab.responseKey ? "bg-white text-slate-900" : "border border-white/10 bg-white/5 text-slate-300"}`} onClick={() => setActiveDoc(tab.responseKey)}>{tab.label}</button>
+            <button key={tab.value} type="button" className={`rounded-xl px-4 py-2 text-sm ${activeDoc === tab.responseKey ? "bg-indigo-600 text-white border-indigo-500" : "border border-white/10 bg-white/5 text-slate-300"}`} onClick={() => setActiveDoc(tab.responseKey)}>{tab.label}</button>
           ))}
         </div>
         <div className="mt-4 inline-flex rounded-xl border border-white/10 bg-white/5 p-1 text-sm">
-          <button type="button" className={`rounded-lg px-3 py-2 ${mode === "preview" ? "bg-white text-slate-900" : "text-slate-300"}`} onClick={() => setMode("preview")}>Preview</button>
-          <button type="button" className={`rounded-lg px-3 py-2 ${mode === "raw" ? "bg-white text-slate-900" : "text-slate-300"}`} onClick={() => setMode("raw")}>Raw Markdown</button>
+          <button type="button" className={`rounded-lg px-3 py-2 ${mode === "preview" ? "bg-indigo-600 text-white" : "text-slate-300"}`} onClick={() => setMode("preview")}>Preview</button>
+          <button type="button" className={`rounded-lg px-3 py-2 ${mode === "raw" ? "bg-indigo-600 text-white" : "text-slate-300"}`} onClick={() => setMode("raw")}>Raw Markdown</button>
         </div>
 
         <div className="mt-6 min-h-[420px] rounded-3xl border border-white/10 bg-black/20 p-5">

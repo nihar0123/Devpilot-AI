@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, FolderGit2, Menu, Plus, Search } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useProjects } from "@/components/projects/project-provider";
@@ -59,7 +60,7 @@ export function DashboardTopBar({ onOpenMenu, user }: { onOpenMenu: () => void; 
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
           <Input className="pl-9" placeholder="Search projects, bugs, docs..." />
         </div>
-        <button type="button" className="relative rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300">
+        <button type="button" className="relative rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300" onClick={() => toast.info("No new notifications")}>
           <Bell size={18} />
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-400" />
         </button>

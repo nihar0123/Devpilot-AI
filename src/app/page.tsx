@@ -37,7 +37,7 @@ export default function LandingPage() {
           <h1 className="mt-8 text-5xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">One cockpit for repo quality, AI findings, and team follow-through</h1>
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-muted">Connect a project, run AI code reviews, find bugs, generate docs and tests, then assign the work and track who completed it.</p>
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-            <Link href="/login" className="inline-flex items-center justify-center rounded-2xl bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--background)] shadow-[0_12px_45px_rgba(255,255,255,0.28)] transition hover:opacity-90">Start Free</Link>
+            <Link href="/login" style={{ backgroundColor: "var(--foreground)", color: "var(--background)" }} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold shadow-[0_12px_45px_rgba(255,255,255,0.28)] transition hover:opacity-90">Start Free</Link>
             <Link href="/dashboard" className="inline-flex items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--card)] px-6 py-3 text-sm font-semibold transition hover:bg-[var(--line)]">Live Demo</Link>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function LandingPage() {
         <div className="rounded-[32px] border border-[var(--purple)] bg-[var(--card)] px-8 py-12 text-center shadow-[0_12px_45px_rgba(117,104,255,0.18)]">
           <h2 className="text-3xl font-semibold sm:text-4xl">Ready to ship better code?</h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-muted">Join thousands of developers already using DevPilot AI.</p>
-          <Link href="/login" className="mt-8 inline-flex rounded-2xl bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--background)] transition hover:opacity-90">Start for free</Link>
+          <Link href="/login" style={{ backgroundColor: "var(--foreground)", color: "var(--background)" }} className="mt-8 inline-flex rounded-2xl px-6 py-3 text-sm font-semibold transition hover:opacity-90">Start for free</Link>
         </div>
       </section>
 

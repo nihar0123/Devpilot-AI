@@ -21,6 +21,13 @@ export async function PATCH(
   const nextStatus = typeof body.status === "string" && STATUSES.has(body.status) ? body.status : undefined;
   const nextPriority = typeof body.priority === "string" && PRIORITIES.has(body.priority) ? body.priority : undefined;
   const nextAssigneeId = body.assigneeId === null ? null : typeof body.assigneeId === "string" ? body.assigneeId : undefined;
+  
+  let nextDeadline: Date | null | undefined = undefined;
+  if (body.deadline === null) nextDeadline = null;
+  else if (typeof body.deadline === "string") {
+    const parsed = new Date(body.deadline);
+    if (!isNaN(parsed.getTime())) nextDeadline = parsed;
+  }
 
   if (nextAssigneeId) {
     const assignee = await prisma.organizationMember.findUnique({
@@ -40,6 +47,7 @@ export async function PATCH(
       ...(nextStatus && { status: nextStatus }),
       ...(nextPriority && { priority: nextPriority }),
       ...(nextAssigneeId !== undefined && { assigneeId: nextAssigneeId }),
+      ...(nextDeadline !== undefined && { deadline: nextDeadline }),
       ...(completedNow && { completedById: workspace.userId, completedAt: new Date() }),
       ...(reopened && { completedById: null, completedAt: null }),
     },
@@ -62,6 +70,7 @@ export async function PATCH(
     ...updated,
     createdAt: updated.createdAt.toISOString(),
     updatedAt: updated.updatedAt.toISOString(),
+    deadline: updated.deadline?.toISOString() ?? null,
     completedAt: updated.completedAt?.toISOString() ?? null,
   });
 }

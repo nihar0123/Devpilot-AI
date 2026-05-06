@@ -17,6 +17,7 @@ type Task = {
   status: "TODO" | "IN_PROGRESS" | "DONE";
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   projectId: string;
+  deadline: string | null;
   assignee: TaskUser | null;
   createdBy: TaskUser;
   completedBy: TaskUser | null;
@@ -66,7 +67,7 @@ export default function TasksPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [deadline, setDeadline] = useState("");
   const [priority, setPriority] = useState<Task["priority"]>("MEDIUM");
   const [assigneeId, setAssigneeId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -120,21 +121,21 @@ export default function TasksPage() {
     const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectId: selectedProject.id, title, description, priority, assigneeId: assigneeId || null }),
+      body: JSON.stringify({ projectId: selectedProject.id, title, deadline: deadline || null, priority, assigneeId: assigneeId || null }),
     });
     if (!res.ok) {
       toast.error("Could not create task");
       return;
     }
     setTitle("");
-    setDescription("");
+    setDeadline("");
     setPriority("MEDIUM");
     setAssigneeId("");
     toast.success("Task created");
     await loadTasks();
   }
 
-  async function updateTask(taskId: string, patch: Partial<Pick<Task, "status" | "priority">> & { assigneeId?: string | null }) {
+  async function updateTask(taskId: string, patch: Partial<Pick<Task, "status" | "priority">> & { assigneeId?: string | null, deadline?: string | null }) {
     const res = await fetch(`/api/tasks/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -179,17 +180,20 @@ export default function TasksPage() {
               <h1 className="text-2xl font-semibold">Team Tasks</h1>
               <p className="mt-2 text-sm text-slate-400">Track assignments for {selectedProject?.name ?? "the selected project"} and see who completed each item.</p>
             </div>
-            <div className="grid flex-[2] gap-3 md:grid-cols-[1fr_1fr_130px_150px_auto]">
-              <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Task title" />
-              <Input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Description" />
-              <select value={priority} onChange={(event) => setPriority(event.target.value as Task["priority"])} className="rounded-2xl border border-white/12 bg-black/20 px-4 py-3 text-sm">
+            <div className="flex flex-wrap flex-[2] items-center gap-3">
+              <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Task name" className="min-w-[150px] flex-1" />
+              <div className="flex items-center gap-2 rounded-2xl border border-white/12 bg-black/20 px-3">
+                <span className="text-xs text-slate-500">Due</span>
+                <input type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} className="bg-transparent py-3 text-sm text-slate-200 outline-none" />
+              </div>
+              <select value={priority} onChange={(event) => setPriority(event.target.value as Task["priority"])} className="rounded-2xl border border-white/12 bg-black/20 px-4 py-3 text-sm outline-none">
                 <option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>URGENT</option>
               </select>
-              <select value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)} className="rounded-2xl border border-white/12 bg-black/20 px-4 py-3 text-sm">
+              <select value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)} className="rounded-2xl border border-white/12 bg-black/20 px-4 py-3 text-sm outline-none">
                 <option value="">Unassigned</option>
                 {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
               </select>
-              <button type="button" className="rounded-2xl bg-[var(--purple)] px-4 py-3 text-sm font-semibold text-white" onClick={createTask}>Add</button>
+              <button type="button" className="rounded-2xl bg-[var(--purple)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90" onClick={createTask}>Add</button>
             </div>
           </div>
         </Card>
@@ -207,7 +211,6 @@ export default function TasksPage() {
                       </button>
                       <div className="min-w-0 flex-1">
                         <p className={task.status === "DONE" ? "font-semibold text-slate-500 line-through" : "font-semibold"}>{task.title}</p>
-                        {task.description ? <p className="mt-2 text-sm text-slate-400">{task.description}</p> : null}
                       </div>
                       <button type="button" className="rounded-xl border border-red-500/20 bg-red-500/10 p-2 text-red-300" onClick={() => deleteTask(task.id)} aria-label="Delete task"><Trash2 size={14} /></button>
                     </div>
@@ -227,9 +230,13 @@ export default function TasksPage() {
                       </div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-slate-500">Priority</span>
-                        <select value={task.priority} onChange={(event) => updateTask(task.id, { priority: event.target.value as Task["priority"] })} className="rounded-xl border border-white/10 bg-black/20 px-2 py-1">
+                        <select value={task.priority} onChange={(event) => updateTask(task.id, { priority: event.target.value as Task["priority"] })} className="rounded-xl border border-white/10 bg-black/20 px-2 py-1 outline-none">
                           <option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>URGENT</option>
                         </select>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-slate-500">Deadline</span>
+                        <input type="date" value={task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : ""} onChange={(event) => updateTask(task.id, { deadline: event.target.value || null })} className="rounded-xl border border-white/10 bg-black/20 px-2 py-1 outline-none" />
                       </div>
                       <p className="text-slate-500">Created by {userLabel(task.createdBy)}</p>
                       {task.completedBy ? <p className="text-emerald-300">Completed by {userLabel(task.completedBy)} {task.completedAt ? `on ${new Date(task.completedAt).toLocaleDateString()}` : ""}</p> : null}

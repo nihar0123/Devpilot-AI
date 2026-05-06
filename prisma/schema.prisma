@@ -204,6 +204,7 @@ model Task {
   sourceType    String?
   sourceId      String?
   assigneeId    String?
+  deadline      DateTime?
   createdById   String
   completedById String?
   completedAt   DateTime?

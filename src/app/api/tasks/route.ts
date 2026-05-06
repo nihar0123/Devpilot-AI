@@ -17,6 +17,7 @@ function serializeTask(task: {
   sourceId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deadline: Date | null;
   completedAt: Date | null;
   assignee: { id: string; name: string | null; email: string | null } | null;
   createdBy: { id: string; name: string | null; email: string | null };
@@ -26,6 +27,7 @@ function serializeTask(task: {
     ...task,
     createdAt: task.createdAt.toISOString(),
     updatedAt: task.updatedAt.toISOString(),
+    deadline: task.deadline?.toISOString() ?? null,
     completedAt: task.completedAt?.toISOString() ?? null,
   };
 }
@@ -61,6 +63,11 @@ export async function POST(req: NextRequest) {
   const status = typeof body.status === "string" && STATUSES.has(body.status) ? body.status : "TODO";
   const priority = typeof body.priority === "string" && PRIORITIES.has(body.priority) ? body.priority : "MEDIUM";
   const assigneeId = typeof body.assigneeId === "string" && body.assigneeId ? body.assigneeId : null;
+  let deadline: Date | null = null;
+  if (typeof body.deadline === "string" && body.deadline) {
+    const parsed = new Date(body.deadline);
+    if (!isNaN(parsed.getTime())) deadline = parsed;
+  }
 
   if (!projectId || !title) {
     return NextResponse.json({ error: "Project and title are required" }, { status: 400 });
@@ -84,6 +91,7 @@ export async function POST(req: NextRequest) {
       description: description || null,
       status,
       priority,
+      deadline,
       assigneeId,
       createdById: workspace.userId,
       sourceType: typeof body.sourceType === "string" ? body.sourceType : null,

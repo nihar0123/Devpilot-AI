@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart2, Bug, CheckSquare, Code2, FileText, LayoutDashboard, Settings, TestTube, Users, X } from "lucide-react";
+import { BarChart2, Bug, CheckSquare, Code2, FileText, LayoutDashboard, Settings, TestTube, Users, X, GitPullRequest, CircleDot } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useProjects } from "@/components/projects/project-provider";
 
-const navItems = [
+const baseNavItems = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Code Review", href: "/dashboard/code-review", icon: Code2 },
   { label: "Docs", href: "/dashboard/docs", icon: FileText },
@@ -24,6 +25,16 @@ function AvatarFallback({ name }: { name?: string | null }) {
 
 export function DashboardSidebar({ mobile = false, onClose, user }: { mobile?: boolean; onClose?: () => void; user?: { name?: string | null; email?: string | null } | null }) {
   const pathname = usePathname();
+  const { selectedProject } = useProjects();
+  
+  const navItems = [...baseNavItems];
+  if (selectedProject) {
+    // Insert GitHub items after Code Review
+    navItems.splice(2, 0, 
+      { label: "Pull Requests", href: `/dashboard/projects/${selectedProject.id}/pulls`, icon: GitPullRequest },
+      { label: "Issues", href: `/dashboard/projects/${selectedProject.id}/issues`, icon: CircleDot }
+    );
+  }
 
   return (
     <aside className={cn("glass-strong flex h-full flex-col justify-between rounded-none border-r border-white/10 p-4 md:rounded-r-3xl", mobile ? "w-[280px]" : "w-full") }>
@@ -34,7 +45,7 @@ export function DashboardSidebar({ mobile = false, onClose, user }: { mobile?: b
         </div>
         <nav className="space-y-2">
           {navItems.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}

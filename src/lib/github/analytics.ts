@@ -12,7 +12,7 @@ function getWeekLabel(date: Date) {
   return `W${week}`;
 }
 
-function parseRepo(repoUrl: string) {
+export function parseRepo(repoUrl: string) {
   const match = repoUrl.match(/github\.com\/([^/]+)\/([^/.]+)/i);
   if (!match) return null;
   return { owner: match[1], repo: match[2] };

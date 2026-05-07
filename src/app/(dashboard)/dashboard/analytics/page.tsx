@@ -100,10 +100,10 @@ export default function RepoAnalyticsPage() {
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatsCard title="Total Commits" value={analytics.metrics.totalCommits} icon={<span>?</span>} loading={loading} />
-        <StatsCard title="PRs Merged" value={analytics.metrics.prsMerged} icon={<span>?</span>} loading={loading} />
-        <StatsCard title="Avg Review Time" value={analytics.metrics.avgReviewTime} icon={<span>?</span>} loading={loading} />
-        <StatsCard title="Code Quality Score" value={analytics.metrics.qualityScore} icon={<span>?</span>} loading={loading} />
+        <StatsCard title="Total Commits" value={analytics.metrics.totalCommits} loading={loading} />
+        <StatsCard title="PRs Merged" value={analytics.metrics.prsMerged} loading={loading} />
+        <StatsCard title="Avg Review Time" value={analytics.metrics.avgReviewTime} loading={loading} />
+        <StatsCard title="Code Quality Score" value={analytics.metrics.qualityScore} loading={loading} />
       </div>
 
       {loading ? <LoadingSkeleton lines={8} height="h-24" /> : (

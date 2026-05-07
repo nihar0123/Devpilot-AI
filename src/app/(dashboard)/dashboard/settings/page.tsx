@@ -95,7 +95,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">{tabs.map((item) => <button key={item} type="button" className={`rounded-2xl px-4 py-3 text-sm ${tab === item ? "bg-white text-slate-900" : "border border-white/10 bg-white/5 text-slate-300"}`} onClick={() => setTab(item)}>{item}</button>)}</div>
+      <div className="flex flex-wrap gap-2">{tabs.map((item) => <button key={item} type="button" className={`rounded-2xl px-4 py-3 text-sm ${tab === item ? "bg-[var(--purple)] text-white border border-[var(--purple)]" : "border border-white/10 bg-white/5 text-slate-300"}`} onClick={() => setTab(item)}>{item}</button>)}</div>
 
       {tab === "Profile" ? <Card><div className="flex items-center gap-5"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10 text-2xl font-semibold">NS</div><div><p className="text-sm text-slate-400">Change Avatar</p></div></div><div className="mt-6 grid gap-4"><Input value={profile.name || session?.user?.name || ""} onChange={(event) => setProfile({ ...profile, name: event.target.value })} placeholder="Full Name" /><Input value={profile.email || session?.user?.email || ""} onChange={(event) => setProfile({ ...profile, email: event.target.value })} placeholder="Email" /><textarea value={profile.bio} onChange={(event) => setProfile({ ...profile, bio: event.target.value })} className="min-h-[120px] rounded-2xl border border-white/12 bg-black/20 px-4 py-3 text-sm" placeholder="Bio" /><button type="button" className="rounded-2xl bg-[var(--purple)] px-4 py-3 text-sm font-semibold text-white" onClick={saveProfile}>Save Changes</button></div></Card> : null}
 

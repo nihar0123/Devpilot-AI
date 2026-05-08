@@ -116,21 +116,8 @@ function LoginContent() {
         throw new Error(body.error || "Signup failed");
       }
 
-      toast.success("Account created successfully.");
-      const signInResult = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-        callbackUrl: callbackPath,
-      });
-
-      if (signInResult?.ok) {
-        router.replace(callbackPath);
-      } else if (signInResult?.url) {
-        window.location.href = signInResult.url;
-      } else {
-        toast.error(signInResult?.error || "Signup complete. Please sign in.");
-      }
+      toast.success("Account created! Please sign in with your credentials.");
+      router.replace(`/login${searchParams.toString() ? `?${searchParams.toString()}` : ""}`);
     } catch (error) {
       toast.error((error as Error).message || "Signup failed");
     } finally {
@@ -196,8 +183,8 @@ function LoginContent() {
         <section className="relative z-20">
           <Card className="mx-auto w-full max-w-xl rounded-[32px] p-8 sm:p-10">
             <div className="mb-6 grid grid-cols-2 rounded-2xl border border-white/10 bg-white/5 p-1 text-sm">
-              <Link href={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} className={`rounded-xl px-4 py-2 text-center ${!isSignup ? "bg-white text-slate-900" : "text-slate-300"}`}>Sign in</Link>
-              <Link href={`/signup${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} className={`rounded-xl px-4 py-2 text-center ${isSignup ? "bg-white text-slate-900" : "text-slate-300"}`}>Sign up</Link>
+              <Link href={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} className={`rounded-xl px-4 py-2 text-center ${!isSignup ? "bg-white text-[#0f172a] font-medium" : "text-slate-300"}`}>Sign in</Link>
+              <Link href={`/signup${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} className={`rounded-xl px-4 py-2 text-center ${isSignup ? "bg-white text-[#0f172a] font-medium" : "text-slate-300"}`}>Sign up</Link>
             </div>
             <h2 className="text-4xl font-semibold text-white">{isSignup ? "Create your cockpit" : "Sign in to your cockpit"}</h2>
             <p className="mt-4 text-base leading-7 text-slate-300">{isSignup ? "Create your account with email and password, then sign in to your workspace." : "Use your email and password to sign in to your workspace."}</p>

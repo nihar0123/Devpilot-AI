@@ -60,6 +60,30 @@ export async function getRepoAnalytics(
   const commits = (await commitsRes.json()) as Array<{ sha: string; commit?: { message?: string, author?: { date?: string; name?: string } } }>;
   const prs = (await prsRes.json()) as Array<{ created_at?: string }>;
 
+  // Paths to exclude from hotspot analysis (dependencies, build artifacts, lockfiles, etc.)
+  const EXCLUDED_PATTERNS = [
+    /node_modules\//i,
+    /\.lock$/i,
+    /package-lock\.json$/i,
+    /yarn\.lock$/i,
+    /pnpm-lock\.yaml$/i,
+    /\.next\//i,
+    /\bdist\//i,
+    /\bbuild\//i,
+    /\bout\//i,
+    /\.cache\//i,
+    /\.vite\//i,
+    /\.turbo\//i,
+    /vendor\//i,
+    /\.min\.(js|css)$/i,
+    /\.map$/i,
+    /\.chunk\./i,
+    /\.bundle\./i,
+  ];
+
+  const isExcludedPath = (filePath: string) =>
+    EXCLUDED_PATTERNS.some((pattern) => pattern.test(filePath));
+
   // Fetch the top 10 most recent commits to analyze file changes (hotspots)
   const recentShas = commits.slice(0, 10).map((c) => c.sha);
   const fileChangeCounts = new Map<string, number>();
@@ -76,7 +100,7 @@ export async function getRepoAnalytics(
   for (const detail of commitDetails) {
     if (!detail || !detail.files) continue;
     for (const file of detail.files) {
-      if (!file.filename) continue;
+      if (!file.filename || isExcludedPath(file.filename)) continue;
       fileChangeCounts.set(file.filename, (fileChangeCounts.get(file.filename) || 0) + file.changes);
     }
   }
@@ -86,7 +110,7 @@ export async function getRepoAnalytics(
     .slice(0, 8); // Top 8 hotspots
 
   const hotspots = sortedFiles.map(([path, changes]) => {
-    // Simulate bugs based on changes
+    // Estimate bugs based on change volume
     const bugs = Math.max(1, Math.floor(changes * 0.15));
     let riskLevel = "Low";
     if (changes > 50) riskLevel = "Critical";

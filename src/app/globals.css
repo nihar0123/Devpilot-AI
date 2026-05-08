@@ -59,7 +59,12 @@ html.light body {
     linear-gradient(180deg, var(--background) 0%, #e2e8f0 45%, var(--background) 100%);
 }
 
-button,
+button {
+  outline: none;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+}
+
 select,
 input,
 textarea {
@@ -106,7 +111,6 @@ a {
   text-decoration: none;
 }
 
-button,
 select,
 input,
 textarea {

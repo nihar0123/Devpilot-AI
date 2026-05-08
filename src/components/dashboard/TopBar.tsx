@@ -90,7 +90,6 @@ export function DashboardTopBar({ onOpenMenu, user }: { onOpenMenu: () => void; 
         </div>
         <button type="button" className="relative rounded-xl border border-white/10 bg-white/5 p-2 text-slate-300" onClick={() => toast.info("No new notifications")}>
           <Bell size={18} />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-400" />
         </button>
         <div className="relative">
           <button type="button" className="flex max-w-[240px] items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left text-sm" onClick={() => setProjectOpen((value) => !value)}>

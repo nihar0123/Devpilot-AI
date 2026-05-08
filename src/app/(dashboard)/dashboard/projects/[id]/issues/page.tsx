@@ -14,6 +14,7 @@ export default function IssuesPage({ params }: { params: Promise<{ id: string }>
   
   const [issues, setIssues] = useState<GitHubIssue[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState("open");
   const [labelFilter, setLabelFilter] = useState<string | null>(null);
   const [selectedIssue, setSelectedIssue] = useState<number | null>(null);
@@ -27,12 +28,27 @@ export default function IssuesPage({ params }: { params: Promise<{ id: string }>
       return;
     }
     setLoading(true);
+    setError(null);
     const labelsParam = labelFilter ? `&labels=${encodeURIComponent(labelFilter)}` : "";
     fetch(`/api/github/${parsed.owner}/${parsed.repo}/issues?state=${tab}${labelsParam}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(data => {
+            throw new Error(data.error || `GitHub API error (${res.status})`);
+          }).catch(() => {
+            throw new Error(`Failed to fetch issues (HTTP ${res.status})`);
+          });
+        }
+        return res.json();
+      })
       .then(data => {
         if (Array.isArray(data)) setIssues(data);
         else setIssues([]);
+      })
+      .catch(err => {
+        console.error("Issues fetch error:", err);
+        setError(err.message || "Failed to fetch issues");
+        setIssues([]);
       })
       .finally(() => setLoading(false));
   };
@@ -42,7 +58,22 @@ export default function IssuesPage({ params }: { params: Promise<{ id: string }>
   }, [project, tab, labelFilter]);
 
   if (!project) return <EmptyState message="Project not found" />;
-  if (!parsed) return <EmptyState message="No GitHub repository linked to this project" />;
+  if (!parsed) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+          <h2 className="text-xl font-semibold text-white mb-2">No Repository Linked</h2>
+          <p className="text-sm text-slate-400 max-w-md mb-4">
+            This project doesn&apos;t have a GitHub repository URL yet. 
+            Add one by clicking the project name in the top bar and editing the project.
+          </p>
+          <p className="text-xs text-slate-500">
+            Hover over <strong className="text-slate-300">{project.name}</strong> in the project dropdown and click the ✏️ edit button to add a repo URL.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const quickLabels = ["bug", "enhancement", "help wanted", "good first issue", "documentation"];
 
@@ -86,6 +117,20 @@ export default function IssuesPage({ params }: { params: Promise<{ id: string }>
       
       {loading ? (
         <Spinner />
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 max-w-lg">
+            <p className="text-sm font-medium text-red-300 mb-1">Failed to load issues</p>
+            <p className="text-xs text-red-400/80">{error}</p>
+            <button
+              type="button"
+              onClick={fetchIssues}
+              className="mt-4 rounded-xl bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/15"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       ) : issues.length === 0 ? (
         <EmptyState message={`No ${tab} issues found`} />
       ) : (

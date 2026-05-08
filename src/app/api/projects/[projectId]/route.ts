@@ -28,7 +28,7 @@ export async function PATCH(
       ...(name !== undefined && { name }),
       ...(repoUrl !== undefined && { repoUrl: repoUrl || null }),
     },
-    select: { id: true, name: true, repoUrl: true, createdAt: true, updatedAt: true },
+    select: { id: true, name: true, repoUrl: true, archived: true, createdAt: true, updatedAt: true },
   });
 
   await recordActivity({
@@ -40,4 +40,31 @@ export async function PATCH(
   });
 
   return NextResponse.json(updated);
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> },
+) {
+  const workspace = await requireWorkspace();
+  if ("error" in workspace) return NextResponse.json({ error: workspace.error }, { status: workspace.status });
+
+  const { projectId } = await params;
+  const project = await getProjectForOrg(projectId, workspace.org.id);
+  if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+
+  await prisma.project.update({
+    where: { id: project.id },
+    data: { archived: true, archivedAt: new Date() },
+  });
+
+  await recordActivity({
+    orgId: workspace.org.id,
+    userId: workspace.userId,
+    action: "PROJECT_ARCHIVED",
+    target: project.id,
+    metadata: { name: project.name },
+  });
+
+  return NextResponse.json({ success: true });
 }

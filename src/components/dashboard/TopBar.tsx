@@ -3,12 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, FolderGit2, Menu, Plus, Search } from "lucide-react";
+import { Bell, ChevronDown, FolderGit2, Menu, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { useProjects } from "@/components/projects/project-provider";
+import { useProjects, type WorkspaceProject } from "@/components/projects/project-provider";
 
 const titles: Record<string, string> = {
   "/dashboard": "Dashboard Overview",
@@ -29,7 +29,11 @@ export function DashboardTopBar({ onOpenMenu, user }: { onOpenMenu: () => void; 
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [repoUrl, setRepoUrl] = useState("");
-  const { projects, selectedProject, selectedProjectId, setSelectedProjectId, createProject, loading } = useProjects();
+  const [editingProject, setEditingProject] = useState<WorkspaceProject | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editRepoUrl, setEditRepoUrl] = useState("");
+  const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
+  const { projects, selectedProject, selectedProjectId, setSelectedProjectId, createProject, updateProject, archiveProject, loading } = useProjects();
   const title = useMemo(() => titles[pathname] ?? "Dashboard", [pathname]);
   const initials = (user?.name ?? "DP").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 
@@ -40,6 +44,30 @@ export function DashboardTopBar({ onOpenMenu, user }: { onOpenMenu: () => void; 
       setRepoUrl("");
       setNewProjectOpen(false);
       setProjectOpen(false);
+    }
+  }
+
+  function startEditing(project: WorkspaceProject, e: React.MouseEvent) {
+    e.stopPropagation();
+    setEditingProject(project);
+    setEditName(project.name);
+    setEditRepoUrl(project.repoUrl ?? "");
+    setNewProjectOpen(false);
+    setConfirmArchiveId(null);
+  }
+
+  async function handleUpdateProject() {
+    if (!editingProject) return;
+    const updated = await updateProject(editingProject.id, { name: editName, repoUrl: editRepoUrl });
+    if (updated) {
+      setEditingProject(null);
+    }
+  }
+
+  async function handleArchive(projectId: string) {
+    const success = await archiveProject(projectId);
+    if (success) {
+      setConfirmArchiveId(null);
     }
   }
 
@@ -71,13 +99,13 @@ export function DashboardTopBar({ onOpenMenu, user }: { onOpenMenu: () => void; 
             <ChevronDown size={14} className="shrink-0 text-slate-400" />
           </button>
           {projectOpen ? (
-            <div className="glass-strong absolute right-0 mt-2 w-[320px] rounded-2xl p-3 text-sm">
+            <div className="glass-strong absolute right-0 mt-2 w-[340px] rounded-2xl p-3 text-sm">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="font-semibold">Project workspace</p>
                   <p className="text-xs text-slate-400">All AI tools save into the selected repo.</p>
                 </div>
-                <button type="button" className="rounded-xl border border-white/10 p-2" onClick={() => setNewProjectOpen((value) => !value)} aria-label="Create project">
+                <button type="button" className="rounded-xl border border-white/10 p-2" onClick={() => { setNewProjectOpen((value) => !value); setEditingProject(null); setConfirmArchiveId(null); }} aria-label="Create project">
                   <Plus size={14} />
                 </button>
               </div>
@@ -88,17 +116,67 @@ export function DashboardTopBar({ onOpenMenu, user }: { onOpenMenu: () => void; 
                   <button type="button" className="w-full rounded-xl bg-[var(--purple)] px-3 py-2 text-xs font-semibold text-white" onClick={handleCreateProject}>Connect Project</button>
                 </div>
               ) : null}
+              {editingProject ? (
+                <div className="mb-3 space-y-2 rounded-2xl border border-purple-500/30 bg-purple-500/5 p-3">
+                  <p className="text-xs font-medium text-purple-300">Editing: {editingProject.name}</p>
+                  <Input value={editName} onChange={(event) => setEditName(event.target.value)} placeholder="Project name" />
+                  <Input value={editRepoUrl} onChange={(event) => setEditRepoUrl(event.target.value)} placeholder="https://github.com/org/repo" />
+                  <div className="flex gap-2">
+                    <button type="button" className="flex-1 rounded-xl bg-[var(--purple)] px-3 py-2 text-xs font-semibold text-white" onClick={handleUpdateProject}>Save Changes</button>
+                    <button type="button" className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300" onClick={() => setEditingProject(null)}>Cancel</button>
+                  </div>
+                </div>
+              ) : null}
               <div className="max-h-64 space-y-1 overflow-auto">
                 {projects.length ? projects.map((project) => (
-                  <button
-                    key={project.id}
-                    type="button"
-                    className={`w-full rounded-xl px-3 py-2 text-left ${selectedProjectId === project.id ? "bg-white text-slate-900" : "hover:bg-white/5"}`}
-                    onClick={() => { setSelectedProjectId(project.id); setProjectOpen(false); }}
-                  >
-                    <span className="block truncate font-medium">{project.name}</span>
-                    <span className={`block truncate text-xs ${selectedProjectId === project.id ? "text-slate-600" : "text-slate-500"}`}>{project.repoUrl ?? "No repo URL yet"}</span>
-                  </button>
+                  <div key={project.id} className={`group relative rounded-xl px-3 py-2 ${selectedProjectId === project.id ? "bg-white/10" : "hover:bg-white/5"}`}>
+                    <button
+                      type="button"
+                      className="w-full text-left"
+                      onClick={() => { setSelectedProjectId(project.id); setProjectOpen(false); }}
+                    >
+                      <span className="block truncate font-medium">{project.name}</span>
+                      <span className="block truncate text-xs text-slate-500">{project.repoUrl ?? "No repo URL yet"}</span>
+                    </button>
+                    {/* Edit & Archive buttons */}
+                    <div className="absolute right-2 top-1/2 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        type="button"
+                        className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+                        onClick={(e) => startEditing(project, e)}
+                        title="Edit project"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      {confirmArchiveId === project.id ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            className="rounded-lg bg-red-500/20 px-2 py-1 text-xs font-medium text-red-300 transition hover:bg-red-500/30"
+                            onClick={(e) => { e.stopPropagation(); handleArchive(project.id); }}
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-lg border border-white/10 px-2 py-1 text-xs text-slate-400 transition hover:bg-white/10"
+                            onClick={(e) => { e.stopPropagation(); setConfirmArchiveId(null); }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-slate-400 transition hover:bg-red-500/15 hover:text-red-300"
+                          onClick={(e) => { e.stopPropagation(); setConfirmArchiveId(project.id); setEditingProject(null); }}
+                          title="Archive project"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 )) : (
                   <div className="rounded-xl border border-dashed border-white/10 p-4 text-xs text-slate-400">Create your first project to connect review, bugs, docs, tests, tasks, and analytics.</div>
                 )}

@@ -8,7 +8,7 @@ export async function GET() {
   if ("error" in workspace) return NextResponse.json({ error: workspace.error }, { status: workspace.status });
 
   const projects = await prisma.project.findMany({
-    where: { orgId: workspace.org.id },
+    where: { orgId: workspace.org.id, archived: false },
     orderBy: { updatedAt: "desc" },
     select: { id: true, name: true, repoUrl: true, createdAt: true, updatedAt: true },
   });

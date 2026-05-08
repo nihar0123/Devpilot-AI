@@ -21,6 +21,8 @@ type ProjectContextValue = {
   setSelectedProjectId: (projectId: string) => void;
   refreshProjects: () => Promise<void>;
   createProject: (input: { name: string; repoUrl?: string }) => Promise<WorkspaceProject | null>;
+  updateProject: (projectId: string, input: { name?: string; repoUrl?: string }) => Promise<WorkspaceProject | null>;
+  archiveProject: (projectId: string) => Promise<boolean>;
 };
 
 const ProjectContext = createContext<ProjectContextValue | null>(null);
@@ -84,6 +86,47 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateProject = useCallback(async (projectId: string, input: { name?: string; repoUrl?: string }) => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const updated = (await res.json()) as WorkspaceProject;
+      setProjects((current) => current.map((p) => (p.id === updated.id ? updated : p)));
+      toast.success("Project updated");
+      return updated;
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not update project");
+      return null;
+    }
+  }, []);
+
+  const archiveProject = useCallback(async (projectId: string) => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await res.text());
+      setProjects((current) => {
+        const remaining = current.filter((p) => p.id !== projectId);
+        // Auto-select next project if the archived one was selected
+        if (selectedProjectId === projectId) {
+          const next = remaining[0]?.id ?? "";
+          setSelectedProjectId(next);
+        }
+        return remaining;
+      });
+      toast.success("Project archived");
+      return true;
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not archive project");
+      return false;
+    }
+  }, [selectedProjectId]);
+
   useEffect(() => {
     if (status !== "authenticated") return;
     const timeout = window.setTimeout(() => {
@@ -98,8 +141,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<ProjectContextValue>(
-    () => ({ projects, selectedProject, selectedProjectId, loading, setSelectedProjectId, refreshProjects, createProject }),
-    [projects, selectedProject, selectedProjectId, loading, refreshProjects, createProject],
+    () => ({ projects, selectedProject, selectedProjectId, loading, setSelectedProjectId, refreshProjects, createProject, updateProject, archiveProject }),
+    [projects, selectedProject, selectedProjectId, loading, refreshProjects, createProject, updateProject, archiveProject],
   );
 
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;

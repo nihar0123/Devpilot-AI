@@ -183,8 +183,8 @@ function LoginContent() {
         <section className="relative z-20">
           <Card className="mx-auto w-full max-w-xl rounded-[32px] p-8 sm:p-10">
             <div className="mb-6 grid grid-cols-2 rounded-2xl border border-white/10 bg-white/5 p-1 text-sm">
-              <Link href={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} className={`rounded-xl px-4 py-2 text-center ${!isSignup ? "bg-white text-[#0f172a] font-medium" : "text-slate-300"}`}>Sign in</Link>
-              <Link href={`/signup${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} className={`rounded-xl px-4 py-2 text-center ${isSignup ? "bg-white text-[#0f172a] font-medium" : "text-slate-300"}`}>Sign up</Link>
+              <Link href={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} style={!isSignup ? { color: "#0f172a" } : undefined} className={`rounded-xl px-4 py-2 text-center font-medium ${!isSignup ? "bg-white" : "text-slate-300"}`}>Sign in</Link>
+              <Link href={`/signup${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} style={isSignup ? { color: "#0f172a" } : undefined} className={`rounded-xl px-4 py-2 text-center font-medium ${isSignup ? "bg-white" : "text-slate-300"}`}>Sign up</Link>
             </div>
             <h2 className="text-4xl font-semibold text-white">{isSignup ? "Create your cockpit" : "Sign in to your cockpit"}</h2>
             <p className="mt-4 text-base leading-7 text-slate-300">{isSignup ? "Create your account with email and password, then sign in to your workspace." : "Use your email and password to sign in to your workspace."}</p>

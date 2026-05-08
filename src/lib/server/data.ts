@@ -28,10 +28,12 @@ export async function getProjects() {
 
 export async function getDashboardMetrics(orgId?: string) {
   try {
+    const analysisWhere = orgId ? { project: { orgId } } : undefined;
+    const bugWhere = orgId ? { project: { orgId } } : undefined;
     const [projects, analyses, bugReports, tests] = await Promise.all([
       prisma.project.count(orgId ? { where: { orgId } } : undefined),
-      prisma.codeAnalysis.findMany(orgId ? { where: { project: { orgId } }, select: { score: true } } : { select: { score: true } }),
-      prisma.bugReport.findMany(orgId ? { where: { project: { orgId } }, select: { severity: true } } : { select: { severity: true } }),
+      prisma.codeAnalysis.findMany({ where: analysisWhere, select: { score: true } }),
+      prisma.bugReport.findMany({ where: bugWhere, select: { severity: true } }),
       prisma.testSuite.count(orgId ? { where: { project: { orgId } } } : undefined),
     ]);
 
@@ -45,11 +47,12 @@ export async function getDashboardMetrics(orgId?: string) {
 
 export async function getOverviewTrend(orgId?: string) {
   try {
-    const analyses = await prisma.codeAnalysis.findMany(
-      orgId
-        ? { where: { project: { orgId } }, orderBy: { createdAt: "desc" }, take: 7, select: { score: true, createdAt: true } }
-        : { orderBy: { createdAt: "desc" }, take: 7, select: { score: true, createdAt: true } }
-    );
+    const analyses = await prisma.codeAnalysis.findMany({
+      where: orgId ? { project: { orgId } } : undefined,
+      orderBy: { createdAt: "desc" },
+      take: 7,
+      select: { score: true, createdAt: true },
+    });
     if (!analyses.length) throw new Error("No data");
     return analyses.reverse().map((entry) => ({ day: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(entry.createdAt), score: entry.score }));
   } catch {

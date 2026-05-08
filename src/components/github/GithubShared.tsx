@@ -1,6 +1,7 @@
 import { GitPullRequest, GitMerge, CircleDot, XCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatDistanceToNow } from "date-fns";
+import type { ReactNode } from "react";
 import { GitHubLabel, GitHubUser } from "@/lib/github/prs-issues";
 
 export function StatusBadge({ state, type, merged_at, draft }: { state: string, type: "pr" | "issue", merged_at?: string | null, draft?: boolean }) {
@@ -98,11 +99,12 @@ export function timeAgo(dateString: string) {
   }
 }
 
-export function EmptyState({ message }: { message: string }) {
+export function EmptyState({ message, action }: { message: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-zinc-400">
       <CircleDot size={32} className="mb-4 opacity-50" />
       <p>{message}</p>
+      {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
 }

@@ -45,11 +45,11 @@ export async function getRepoAnalytics(
   const [commitsRes, prsRes] = await Promise.all([
     fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/commits?per_page=100`, {
       headers,
-      cache: "no-store",
+      next: { revalidate: 300 },
     }),
     fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/pulls?state=all&per_page=100`, {
       headers,
-      cache: "no-store",
+      next: { revalidate: 300 },
     }),
   ]);
 
@@ -92,7 +92,7 @@ export async function getRepoAnalytics(
     recentShas.map((sha) =>
       fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/commits/${sha}`, {
         headers,
-        cache: "no-store",
+        next: { revalidate: 300 },
       }).then((res) => (res.ok ? res.json() : null))
     )
   );

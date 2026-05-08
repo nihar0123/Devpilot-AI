@@ -11,7 +11,18 @@ export async function GET() {
 
   const members = await prisma.organizationMember.findMany({
     where: { orgId: org.id },
-    include: { user: true },
+    select: {
+      id: true,
+      userId: true,
+      role: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
     orderBy: { joinedAt: "asc" },
   });
 

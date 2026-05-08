@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Bug, FolderOpen, TestTube, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -11,7 +12,11 @@ import { useProjects } from "@/components/projects/project-provider";
 
 type TrendPoint = { day: string; score: number };
 type ActivityItem = { id: string; type: string; description: string; time: string };
-type RepoAnalytics = { bugHotspotData?: Array<{ bugs: number }>; recentActivityData?: ActivityItem[] };
+type DashboardOverviewPayload = {
+  metrics: { totalProjects: number; avgQuality: number; openBugs: number; testsGenerated: number };
+  trend: TrendPoint[];
+  activity: ActivityItem[];
+};
 
 export default function DashboardOverviewPage() {
   const { selectedProject, projects } = useProjects();
@@ -24,19 +29,13 @@ export default function DashboardOverviewPage() {
     let mounted = true;
     (async () => {
       try {
-        const [projectsRes, analyticsRes, repoRes] = await Promise.all([fetch("/api/projects"), fetch("/api/analytics"), fetch("/api/repo-analytics")]);
-        const projects = (await projectsRes.json()) as Array<{ id: string }>;
-        const analytics = (await analyticsRes.json()) as TrendPoint[];
-        const repo = (await repoRes.json()) as RepoAnalytics;
+        const res = await fetch("/api/dashboard/overview");
+        if (!res.ok) throw new Error(await res.text());
+        const payload = (await res.json()) as DashboardOverviewPayload;
         if (!mounted) return;
-        setMetrics({
-          totalProjects: projects.length || 0,
-          avgQuality: analytics.length ? Math.round(analytics.reduce((sum, item) => sum + item.score, 0) / analytics.length) : 78,
-          openBugs: repo.bugHotspotData?.reduce((sum, item) => sum + item.bugs, 0) ?? 5,
-          testsGenerated: 42,
-        });
-        setTrend(analytics);
-        setActivity((repo.recentActivityData ?? []).slice(0, 5));
+        setMetrics(payload.metrics);
+        setTrend(payload.trend);
+        setActivity(payload.activity);
       } catch (error) {
         console.error(error);
       } finally {
@@ -91,7 +90,7 @@ export default function DashboardOverviewPage() {
             {loading ? <LoadingSkeleton lines={5} height="h-16" /> : activity.map((item) => (
               <div key={item.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 <p className="text-sm font-medium">{item.description}</p>
-                <p className="mt-1 text-xs text-slate-400">{item.time}</p>
+                <p className="mt-1 text-xs text-slate-400">{formatDistanceToNow(new Date(item.time), { addSuffix: true })}</p>
               </div>
             ))}
           </div>

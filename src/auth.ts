@@ -79,6 +79,24 @@ export const authConfig: NextAuthOptions = {
     error: "/login",
   },
   callbacks: {
+    async jwt({ token }) {
+      // Cache org membership in JWT to skip DB lookup on every API call
+      if (token.sub && !token.orgId) {
+        try {
+          const member = await prisma.organizationMember.findFirst({
+            where: { userId: token.sub },
+            select: { orgId: true, role: true },
+          });
+          if (member) {
+            token.orgId = member.orgId;
+            token.orgRole = member.role;
+          }
+        } catch {
+          // Silently fail — requireWorkspace will fall back to DB lookup
+        }
+      }
+      return token;
+    },
     async redirect({ url, baseUrl }) {
       if (url.startsWith("/")) {
         return `${baseUrl}${url === "/" ? "/dashboard" : url}`;
@@ -92,6 +110,9 @@ export const authConfig: NextAuthOptions = {
       if (session.user) {
         session.user.id = user?.id ?? (token.sub as string);
       }
+      // Pass cached org info to session so requireWorkspace can skip DB calls
+      (session as any).orgId = token.orgId;
+      (session as any).orgRole = token.orgRole;
       return session;
     },
   },

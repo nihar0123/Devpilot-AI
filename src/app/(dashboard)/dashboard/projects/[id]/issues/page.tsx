@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, use } from "react";
 import { parseRepo } from "@/lib/github/analytics";
 import { GitHubIssue } from "@/lib/github/prs-issues";
@@ -57,7 +58,18 @@ export default function IssuesPage({ params }: { params: Promise<{ id: string }>
     fetchIssues();
   }, [project, tab, labelFilter]);
 
-  if (!project) return <EmptyState message="Project not found" />;
+  if (!project) {
+    return (
+      <EmptyState
+        message="Select a project from the dashboard to view issues"
+        action={
+          <Link href="/dashboard" className="rounded-xl bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/15">
+            Go to Dashboard
+          </Link>
+        }
+      />
+    );
+  }
   if (!parsed) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 text-center">

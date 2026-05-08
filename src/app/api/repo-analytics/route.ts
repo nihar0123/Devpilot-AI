@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { getRepoAnalytics as getDemoAnalytics, getRecentActivity } from "@/lib/server/data";
-import { getRepoAnalytics } from "@/lib/github/analytics";
+import { getRepoAnalytics, type GitHubAnalyticsResult } from "@/lib/github/analytics";
 import { getProjectForOrg, requireWorkspace } from "@/lib/server/projects";
 
 type RepoAnalyticsPayload = Awaited<ReturnType<typeof getDemoAnalytics>> & {
   recentActivityData?: Awaited<ReturnType<typeof getRecentActivity>>;
   isSolo?: boolean;
 };
+
+// In-memory cache: avoids 12+ GitHub API calls on repeat page visits
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const analyticsCache = new Map<string, { data: GitHubAnalyticsResult; ts: number }>();
+
+function getCached(key: string): GitHubAnalyticsResult | null {
+  const entry = analyticsCache.get(key);
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.data;
+  analyticsCache.delete(key);
+  return null;
+}
 
 export async function GET(request: NextRequest) {
   const urlParams = request.nextUrl.searchParams;
@@ -32,7 +43,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const githubToken = process.env.GITHUB_TOKEN;
-    const realData = await getRepoAnalytics(repoUrl, githubToken);
+    const cached = getCached(repoUrl);
+    const realData = cached ?? await getRepoAnalytics(repoUrl, githubToken);
+    if (!cached) analyticsCache.set(repoUrl, { data: realData, ts: Date.now() });
     
     // Replace the demo commit activity with real GitHub data
     payload.commitActivityData = realData.weeklyData.map(point => ({

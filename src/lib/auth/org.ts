@@ -48,6 +48,18 @@ export async function requireOrgManager() {
     return { error: "Unauthorized" as const, status: 401 as const };
   }
 
+  // Fast path: org info cached in JWT
+  const cachedOrgId = (session as any).orgId as string | undefined;
+  const cachedRole = (session as any).orgRole as string | undefined;
+
+  if (cachedOrgId && cachedRole) {
+    if (!canManageOrg(cachedRole)) {
+      return { error: "Insufficient permissions" as const, status: 403 as const };
+    }
+    return { session, userId: session.user.id, org: { id: cachedOrgId }, role: cachedRole };
+  }
+
+  // Slow path
   const { org, role } = await getOrCreateUserOrg(session.user.id, session.user.name || "");
   if (!canManageOrg(role)) {
     return { error: "Insufficient permissions" as const, status: 403 as const };

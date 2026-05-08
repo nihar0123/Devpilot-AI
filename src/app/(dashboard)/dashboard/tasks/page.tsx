@@ -118,44 +118,94 @@ export default function TasksPage() {
       toast.error("Connect a project first");
       return;
     }
-    const res = await fetch("/api/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectId: selectedProject.id, title, deadline: deadline || null, priority, assigneeId: assigneeId || null }),
-    });
-    if (!res.ok) {
-      toast.error("Could not create task");
+    if (!title.trim()) {
+      toast.error("Task name is required");
       return;
     }
+
+    // Optimistic: add a temporary task to the UI immediately
+    const tempId = `temp-${Date.now()}`;
+    const assignee = assigneeId ? members.find((m) => m.userId === assigneeId) : null;
+    const optimisticTask: Task = {
+      id: tempId,
+      title: title.trim(),
+      description: null,
+      status: "TODO",
+      priority,
+      projectId: selectedProject.id,
+      deadline: deadline || null,
+      assignee: assignee ? { id: assignee.userId, name: assignee.name, email: assignee.email } : null,
+      createdBy: { id: "", name: "You", email: null },
+      completedBy: null,
+      completedAt: null,
+      updatedAt: new Date().toISOString(),
+    };
+    setTasks((prev) => [optimisticTask, ...prev]);
     setTitle("");
     setDeadline("");
     setPriority("MEDIUM");
     setAssigneeId("");
+
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId: selectedProject.id, title: optimisticTask.title, deadline: deadline || null, priority, assigneeId: assigneeId || null }),
+    });
+    if (!res.ok) {
+      setTasks((prev) => prev.filter((t) => t.id !== tempId));
+      toast.error("Could not create task");
+      return;
+    }
+    const created = (await res.json()) as Task;
+    setTasks((prev) => prev.map((t) => (t.id === tempId ? created : t)));
     toast.success("Task created");
-    await loadTasks();
   }
 
   async function updateTask(taskId: string, patch: Partial<Pick<Task, "status" | "priority">> & { assigneeId?: string | null, deadline?: string | null }) {
+    // Optimistic: apply change immediately
+    const previousTasks = tasks;
+    setTasks((prev) => prev.map((t) => {
+      if (t.id !== taskId) return t;
+      const updated = { ...t };
+      if (patch.status) updated.status = patch.status;
+      if (patch.priority) updated.priority = patch.priority;
+      if (patch.deadline !== undefined) updated.deadline = patch.deadline;
+      if (patch.assigneeId !== undefined) {
+        if (patch.assigneeId === null) {
+          updated.assignee = null;
+        } else {
+          const member = members.find((m) => m.userId === patch.assigneeId);
+          if (member) updated.assignee = { id: member.userId, name: member.name, email: member.email };
+        }
+      }
+      return updated;
+    }));
+
     const res = await fetch(`/api/tasks/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     });
     if (!res.ok) {
+      setTasks(previousTasks); // Rollback
       toast.error("Could not update task");
       return;
     }
-    await loadTasks();
+    const serverTask = (await res.json()) as Task;
+    setTasks((prev) => prev.map((t) => (t.id === serverTask.id ? serverTask : t)));
   }
 
   async function deleteTask(taskId: string) {
+    // Optimistic: remove immediately
+    const previousTasks = tasks;
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    toast.success("Task deleted");
+
     const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
     if (!res.ok) {
+      setTasks(previousTasks); // Rollback
       toast.error("Could not delete task");
-      return;
     }
-    toast.success("Task deleted");
-    await loadTasks();
   }
 
   const byStatus = useMemo(() => {

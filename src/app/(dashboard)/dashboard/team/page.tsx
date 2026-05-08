@@ -1,22 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { Copy, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Input } from "@/components/ui/input";
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 type Member = { id: string; name: string; email: string; role: string; status: string };
 type Invite = { id: string; email: string; role: string; sentAt: string; expiresAt: string; inviteUrl: string; status: string };
 type Activity = { id: string; description: string; time: string };
 type Task = { id: string; title: string; status: string; assignee: { name: string | null; email: string | null } | null; completedBy: { name: string | null; email: string | null } | null; projectId: string };
-type TeamData = { members: Member[]; invites: Invite[]; context: { organization: { id: string; name: string } }; activity: Activity[] };
 type LeaderboardPerson = { id: string; name: string; role: string; score: number };
+type TeamData = { members: Member[]; invites: Invite[]; context: { organization: { id: string; name: string } }; activity: Activity[]; leaderboard: LeaderboardPerson[] };
 
 export default function TeamPage() {
   const [data, setData] = useState<TeamData | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("MEMBER");
   const [openModal, setOpenModal] = useState(false);
@@ -27,24 +30,17 @@ export default function TeamPage() {
   }, []);
 
   async function loadData() {
-    const [membersRes, invitesRes, contextRes, activityRes, tasksRes] = await Promise.all([
-      fetch("/api/team/members"),
-      fetch("/api/team/invites"),
-      fetch("/api/team/context"),
-      fetch("/api/activity"),
-      fetch("/api/tasks"),
-    ]);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/team/overview");
+      if (!res.ok) throw new Error(await res.text());
+      const payload = (await res.json()) as TeamData & { tasks: Task[] };
 
-    const [members, invites, context, activity, tasksData] = await Promise.all([
-      membersRes.json() as Promise<Member[]>,
-      invitesRes.json() as Promise<Invite[]>,
-      contextRes.json() as Promise<{ organization: { id: string; name: string } }> ,
-      activityRes.json() as Promise<Activity[]>,
-      tasksRes.json() as Promise<Task[]>,
-    ]);
-
-    setData({ members, invites, context, activity });
-    setTasks(tasksData);
+      setData({ members: payload.members, invites: payload.invites, context: payload.context, activity: payload.activity, leaderboard: payload.leaderboard });
+      setTasks(payload.tasks);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function sendInvite() {
@@ -115,7 +111,22 @@ export default function TeamPage() {
   const totalCount = tasks.length;
   const progressWidth = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
   const recentTasks = useMemo(() => tasks.slice(0, 5), [tasks]);
-  const leaderboard = useMemo<LeaderboardPerson[]>(() => data?.activity?.slice(0, 5).map((item, index) => ({ id: item.id, name: ["Nihar Sharma", "Aarav Mehta", "Sana Patel", "Ishaan Rao", "Maya Singh"][index], role: ["OWNER", "ADMIN", "MEMBER", "MEMBER", "VIEWER"][index], score: [96, 91, 88, 84, 77][index] })) ?? [], [data]);
+  const leaderboard = data?.leaderboard ?? [];
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <LoadingSkeleton lines={4} height="h-5" />
+        </Card>
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card><LoadingSkeleton lines={5} height="h-8" /></Card>
+          <Card><LoadingSkeleton lines={5} height="h-8" /></Card>
+        </div>
+        <Card><LoadingSkeleton lines={4} height="h-6" /></Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -271,7 +282,7 @@ export default function TeamPage() {
           {data?.activity?.slice(0, 10).map((item) => (
             <div key={item.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
               <p className="text-sm font-medium">{item.description}</p>
-              <p className="mt-1 text-xs text-slate-400">{item.time}</p>
+              <p className="mt-1 text-xs text-slate-400">{formatDistanceToNow(new Date(item.time), { addSuffix: true })}</p>
             </div>
           ))}
         </div>

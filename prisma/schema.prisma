@@ -80,6 +80,7 @@ model Project {
   analytics  Analytics[]
   tasks      Task[]
 
+  @@index([userId])
   @@index([orgId])
 }
 
@@ -183,6 +184,8 @@ model TeamInvite {
   expiresAt DateTime
   createdAt DateTime     @default(now())
   org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
 }
 
 model Subscription {
@@ -232,4 +235,6 @@ model AuditLog {
   createdAt DateTime      @default(now())
   org       Organization? @relation(fields: [orgId], references: [id])
   user      User?         @relation(fields: [userId], references: [id])
+
+  @@index([orgId])
 }

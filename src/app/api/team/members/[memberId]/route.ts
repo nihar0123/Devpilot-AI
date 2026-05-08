@@ -21,7 +21,16 @@ export async function PATCH(
   const updated = await prisma.organizationMember.update({
     where: { id: memberId, orgId: guard.org.id },
     data: { role },
-    include: { user: true },
+    select: {
+      id: true,
+      role: true,
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
   });
 
   return NextResponse.json({

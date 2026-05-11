@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getProviders, signIn, useSession } from "next-auth/react";
 import { Loader2, ShieldCheck, Sparkles, Workflow } from "lucide-react";
@@ -15,6 +15,184 @@ const highlights = [
   "Documentation and tests generated in minutes",
   "Team analytics, invite workflows, and audit logs",
 ];
+
+/* ─── 3D Background: Stars ──────────────────────────────────────────── */
+function Stars() {
+  const count = 80;
+  const stars = useRef(
+    Array.from({ length: count }, () => ({
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 2.5 + 0.5,
+      delay: Math.random() * 6,
+      duration: Math.random() * 3 + 2,
+      opacity: Math.random() * 0.6 + 0.2,
+    }))
+  ).current;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {stars.map((s, i) => (
+        <span
+          key={i}
+          style={{
+            position: "absolute",
+            left: `${s.x}%`,
+            top: `${s.y}%`,
+            width: s.size,
+            height: s.size,
+            borderRadius: "50%",
+            background: "#fff",
+            opacity: s.opacity,
+            animation: `twinkle ${s.duration}s ${s.delay}s ease-in-out infinite alternate`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ─── 3D Background: Floating Orbs ──────────────────────────────────── */
+function FloatingOrbs() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {/* Primary large orb — violet */}
+      <div
+        style={{
+          position: "absolute",
+          width: 420,
+          height: 420,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(139,92,246,0.35) 0%, rgba(139,92,246,0) 70%)",
+          top: "8%",
+          left: "12%",
+          filter: "blur(60px)",
+          animation: "orbFloat1 8s ease-in-out infinite",
+        }}
+      />
+      {/* Secondary orb — indigo */}
+      <div
+        style={{
+          position: "absolute",
+          width: 300,
+          height: 300,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99,102,241,0.3) 0%, rgba(99,102,241,0) 70%)",
+          bottom: "15%",
+          right: "8%",
+          filter: "blur(50px)",
+          animation: "orbFloat2 10s ease-in-out infinite",
+        }}
+      />
+      {/* Tertiary orb — purple/pink */}
+      <div
+        style={{
+          position: "absolute",
+          width: 220,
+          height: 220,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(168,85,247,0.25) 0%, rgba(168,85,247,0) 70%)",
+          top: "55%",
+          left: "55%",
+          filter: "blur(45px)",
+          animation: "orbFloat3 12s ease-in-out infinite",
+        }}
+      />
+      {/* Small accent orb — cyan hint */}
+      <div
+        style={{
+          position: "absolute",
+          width: 160,
+          height: 160,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(56,189,248,0.2) 0%, rgba(56,189,248,0) 70%)",
+          top: "20%",
+          right: "25%",
+          filter: "blur(40px)",
+          animation: "orbFloat1 14s 2s ease-in-out infinite",
+        }}
+      />
+    </div>
+  );
+}
+
+/* ─── 3D Background: Perspective Grid ───────────────────────────────── */
+function PerspectiveGrid() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-x-0 bottom-0"
+      aria-hidden="true"
+      style={{
+        height: "55%",
+        perspective: "600px",
+        overflow: "hidden",
+        maskImage: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 90%)",
+        WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 90%)",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          transformOrigin: "center top",
+          transform: "rotateX(55deg)",
+          backgroundImage:
+            "linear-gradient(rgba(139,92,246,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.12) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+          animation: "gridScroll 6s linear infinite",
+        }}
+      />
+    </div>
+  );
+}
+
+/* ─── Violet Glow Ring behind card ──────────────────────────────────── */
+function GlowRing() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 -z-10"
+      aria-hidden="true"
+      style={{
+        background:
+          "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(139,92,246,0.18) 0%, transparent 70%)",
+        animation: "breatheGlow 4s ease-in-out infinite",
+      }}
+    />
+  );
+}
+
+/* ─── CSS Keyframes (injected once) ─────────────────────────────────── */
+const animationCSS = `
+@keyframes twinkle {
+  0% { opacity: 0.15; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.2); }
+}
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, -25px) scale(1.08); }
+}
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, 20px) scale(1.06); }
+}
+@keyframes orbFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, -15px) scale(1.04); }
+  66% { transform: translate(-15px, 10px) scale(0.96); }
+}
+@keyframes gridScroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 60px; }
+}
+@keyframes breatheGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+`;
+
+function AnimationStyles() {
+  return <style dangerouslySetInnerHTML={{ __html: animationCSS }} />;
+}
 
 function LoadingScreen() {
   return <div className="flex min-h-screen items-center justify-center text-sm text-slate-400">Loading workspace...</div>;
@@ -33,6 +211,21 @@ function LoginContent() {
   const [githubLoading, setGithubLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [providers, setProviders] = useState<Record<string, unknown> | null>(null);
+
+  /* ─── Card tilt on mouse move ───────────────────────────────────── */
+  const cardRef = useRef<HTMLDivElement>(null);
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg)`;
+  }, []);
+  const handleMouseLeave = useCallback(() => {
+    const el = cardRef.current;
+    if (el) el.style.transform = "perspective(800px) rotateY(0deg) rotateX(0deg)";
+  }, []);
 
   const defaultCallback = "/dashboard";
   const callbackPath = searchParams.get("callbackUrl") ?? defaultCallback;
@@ -159,9 +352,20 @@ function LoginContent() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.35),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(56,189,248,0.28),transparent_32%),linear-gradient(to_bottom,#070b14,#0b1222)]" />
+    <main className="relative min-h-screen overflow-hidden" style={{ background: "#080810" }}>
+      {/* ─── Inject animation keyframes ─── */}
+      <AnimationStyles />
+
+      {/* ─── 3D Background layers ─── */}
+      <Stars />
+      <FloatingOrbs />
+      <PerspectiveGrid />
+
+      {/* ─── Original gradient overlays ─── */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.35),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(56,189,248,0.28),transparent_32%)]" style={{ mixBlendMode: "screen" }} />
       <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/2 bg-[linear-gradient(135deg,rgba(117,104,255,0.12),transparent)] lg:block" />
+
+      {/* ─── Page content ─── */}
       <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 gap-10 px-6 py-10 lg:grid-cols-2 lg:items-center">
         <section className="space-y-8">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs text-slate-200"><Sparkles size={14} /> Build Faster. Review Smarter. Ship Better.</p>
@@ -181,35 +385,45 @@ function LoginContent() {
         </section>
 
         <section className="relative z-20">
-          <Card className="mx-auto w-full max-w-xl rounded-[32px] p-8 sm:p-10">
-            <div className="mb-6 grid grid-cols-2 rounded-2xl border border-white/10 bg-white/5 p-1 text-sm">
-              <Link href={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} style={!isSignup ? { color: "#0f172a" } : undefined} className={`rounded-xl px-4 py-2 text-center font-medium ${!isSignup ? "bg-white" : "text-slate-300"}`}>Sign in</Link>
-              <Link href={`/signup${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} style={isSignup ? { color: "#0f172a" } : undefined} className={`rounded-xl px-4 py-2 text-center font-medium ${isSignup ? "bg-white" : "text-slate-300"}`}>Sign up</Link>
-            </div>
-            <h2 className="text-4xl font-semibold text-white">{isSignup ? "Create your cockpit" : "Sign in to your cockpit"}</h2>
-            <p className="mt-4 text-base leading-7 text-slate-300">{isSignup ? "Create your account with email and password, then sign in to your workspace." : "Use your email and password to sign in to your workspace."}</p>
-            <div className="mt-8 space-y-3">
-              <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" onKeyDown={(event) => event.key === "Enter" && (isSignup ? handleSignup() : handleLogin())} />
-              {isSignup ? <Input type="text" value={name} onChange={(event) => setName(event.target.value)} placeholder="Full name" /> : null}
-              <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" onKeyDown={(event) => event.key === "Enter" && (isSignup ? handleSignup() : handleLogin())} />
-              <Button type="button" size="lg" className="w-full" onClick={isSignup ? handleSignup : handleLogin} disabled={loading}>
-                {loading ? <Loader2 size={16} className="animate-spin" /> : null}
-                {loading ? "Working..." : isSignup ? "Create account" : "Sign in"}
-              </Button>
-            </div>
-            <div className="my-8 h-px bg-white/10" />
-            <div className="space-y-3">
-              <Button type="button" size="lg" className="w-full" onClick={handleGitHub} disabled={!githubConfigured || githubLoading}>
-                {githubLoading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                {githubLoading ? "Connecting..." : isSignup ? "Sign up with GitHub" : "Continue with GitHub"}
-              </Button>
-              <Button type="button" size="lg" variant="outline" className="w-full" onClick={handleGoogle} disabled={!googleConfigured || googleLoading} title={googleConfigured ? undefined : "Configure GOOGLE_CLIENT_ID in .env to enable"}>
-                {googleLoading ? <Loader2 size={16} className="animate-spin" /> : null}
-                {googleLoading ? "Connecting..." : isSignup ? "Sign up with Google" : "Continue with Google"}
-              </Button>
-            </div>
-            <p className="mt-8 text-xs text-slate-400">By continuing, you agree to our <Link href="/terms" className="text-slate-200 underline underline-offset-4">Terms</Link> and <Link href="/privacy" className="text-slate-200 underline underline-offset-4">Privacy Policy</Link>.</p>
-          </Card>
+          {/* Violet glow ring behind card */}
+          <GlowRing />
+
+          <div
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ transition: "transform 0.15s ease-out", willChange: "transform" }}
+          >
+            <Card className="mx-auto w-full max-w-xl rounded-[32px] p-8 sm:p-10" style={{ background: "rgba(12,10,30,0.72)", border: "1px solid rgba(139,92,246,0.18)", boxShadow: "0 0 80px rgba(139,92,246,0.12), 0 20px 60px rgba(0,0,0,0.5)" }}>
+              <div className="mb-6 grid grid-cols-2 rounded-2xl border border-white/10 bg-white/5 p-1 text-sm">
+                <Link href={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} style={{ color: !isSignup ? "#0f172a" : "#cbd5e1" }} className={`rounded-xl px-4 py-2 text-center font-medium ${!isSignup ? "bg-white" : ""}`}>Sign in</Link>
+                <Link href={`/signup${searchParams.toString() ? `?${searchParams.toString()}` : ""}`} style={{ color: isSignup ? "#0f172a" : "#cbd5e1" }} className={`rounded-xl px-4 py-2 text-center font-medium ${isSignup ? "bg-white" : ""}`}>Sign up</Link>
+              </div>
+              <h2 className="text-4xl font-semibold text-white">{isSignup ? "Create your cockpit" : "Sign in to your cockpit"}</h2>
+              <p className="mt-4 text-base leading-7 text-slate-300">{isSignup ? "Create your account with email and password, then sign in to your workspace." : "Use your email and password to sign in to your workspace."}</p>
+              <div className="mt-8 space-y-3">
+                <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" onKeyDown={(event) => event.key === "Enter" && (isSignup ? handleSignup() : handleLogin())} />
+                {isSignup ? <Input type="text" value={name} onChange={(event) => setName(event.target.value)} placeholder="Full name" /> : null}
+                <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" onKeyDown={(event) => event.key === "Enter" && (isSignup ? handleSignup() : handleLogin())} />
+                <Button type="button" size="lg" className="w-full" onClick={isSignup ? handleSignup : handleLogin} disabled={loading}>
+                  {loading ? <Loader2 size={16} className="animate-spin" /> : null}
+                  {loading ? "Working..." : isSignup ? "Create account" : "Sign in"}
+                </Button>
+              </div>
+              <div className="my-8 h-px bg-white/10" />
+              <div className="space-y-3">
+                <Button type="button" size="lg" className="w-full" onClick={handleGitHub} disabled={!githubConfigured || githubLoading}>
+                  {githubLoading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+                  {githubLoading ? "Connecting..." : isSignup ? "Sign up with GitHub" : "Continue with GitHub"}
+                </Button>
+                <Button type="button" size="lg" variant="outline" className="w-full" onClick={handleGoogle} disabled={!googleConfigured || googleLoading} title={googleConfigured ? undefined : "Configure GOOGLE_CLIENT_ID in .env to enable"}>
+                  {googleLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+                  {googleLoading ? "Connecting..." : isSignup ? "Sign up with Google" : "Continue with Google"}
+                </Button>
+              </div>
+              <p className="mt-8 text-xs text-slate-400">By continuing, you agree to our <Link href="/terms" className="text-slate-200 underline underline-offset-4">Terms</Link> and <Link href="/privacy" className="text-slate-200 underline underline-offset-4">Privacy Policy</Link>.</p>
+            </Card>
+          </div>
         </section>
       </div>
     </main>

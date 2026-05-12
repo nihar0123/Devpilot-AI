@@ -1,4 +1,4 @@
-import { generateAiJson } from "@/lib/ai/client";
+import { generateAiJson, hasAiKey } from "@/lib/ai/client";
 
 export interface CodeReviewResult {
   score: number;
@@ -24,14 +24,14 @@ export interface CodeReviewResult {
 function getUnavailableResult(): CodeReviewResult {
   return {
     score: 0,
-    summary: "AI analysis is unavailable. Please configure GROQ_API_KEY in your environment.",
+    summary: "AI analysis is unavailable. Please configure your AI API keys in the environment.",
     issues: [
       {
         id: "review-1",
         severity: "medium",
         title: "No AI provider configured",
-        description: "Set GROQ_API_KEY in your .env file to enable code analysis.",
-        suggestedFix: "Add your Groq API key to the environment variables and restart the server.",
+        description: "Set GEMINI_API_KEY or GROQ_API_KEY in your .env file to enable code analysis.",
+        suggestedFix: "Add your Gemini or Groq API key to the environment variables and restart the server.",
       },
     ],
     refactoredCode: "",
@@ -95,8 +95,8 @@ Return only valid JSON.`;
 }
 
 export async function analyzeCode(code: string, language: string) {
-  // Use Groq when key exists
-  if (process.env.GROQ_API_KEY) {
+  // Use AI when keys exist
+  if (hasAiKey()) {
     try {
       return await analyzeWithProvider(code, language);
     } catch (error) {
@@ -111,7 +111,7 @@ export async function analyzeCode(code: string, language: string) {
             severity: "high",
             title: "Analysis service unavailable",
             description: `The AI review service returned an error: ${error instanceof Error ? error.message : "Unknown error"}`,
-            suggestedFix: "Verify your GROQ_API_KEY is valid and has sufficient quota.",
+            suggestedFix: "Verify your API keys are valid and have sufficient quota.",
           },
         ],
         refactoredCode: code,
